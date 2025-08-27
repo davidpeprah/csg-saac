@@ -202,9 +202,9 @@ def readSheet(response_sheet):
                 logging.debug(f"Row {row_count} does not match any known entry types. Skipping...")
 
 
-        except IndexError:
+        except IndexError as e:
+            logging.error(f"Row {row_count} is missing some data, error_msg: {str(e)}. Skipping to the next row.")
             row_count += 1
-            logging.error(f"Row {row_count} is missing some data. Skipping to the next row.")
             continue
         
         row_count += 1
