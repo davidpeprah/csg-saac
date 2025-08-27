@@ -211,3 +211,4 @@ app_auth.json
 credentials.json
 token.json
 config.json
+.DS_Store
