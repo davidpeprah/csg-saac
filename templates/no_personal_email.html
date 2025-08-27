@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>New Hire Account Notification - CSG</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f9f9f9; color: #333; }
+        .container { max-width: 600px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);}
+        h2 { color: #2a7ae2; }
+        .details { background: #f1f7fc; padding: 15px; border-radius: 5px; margin: 20px 0;}
+        .footer { font-size: 0.9em; color: #888; margin-top: 30px;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2></h2>
+        <p>Hello,</p>
+        <p>This is to notify you that the account for {{ employee_name }} ({{ new_hire_jrole }} in {{ new_hire_dpart }}) was created successfully. <br>
+        An email containing the account information has been sent to the new hire using the personal email ({{personal_email}}) you provided. </p> 
+        <div class="footer">
+            Best regards,<br>
+            IT Team
+            <br>
+            <br>
+             &copy; {{ current_year }} Vartek Services. All rights reserved.
+        </div>
+    </div>
+</body>
+</html>

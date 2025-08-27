@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>New Hire Account Notification - CSG</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f9f9f9; color: #333; }
+        .container { max-width: 600px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);}
+        h2 { color: #2a7ae2; }
+        .details { background: #f1f7fc; padding: 15px; border-radius: 5px; margin: 20px 0;}
+        .footer { font-size: 0.9em; color: #888; margin-top: 30px;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Welcome to the Team!</h2>
+        <p>Dear {{ employee_name }},</p>
+        <p>
+            We are excited to welcome you to our organization. Your employee account has been created. Please find your login details below:
+        </p>
+        <div class="details">
+            <strong>Username:</strong> {{ username }}<br>
+            <strong>Email:</strong> {{ email }}<br>
+            <strong>Temporary Password:</strong> {{ password }}
+        </div>
+        <p>
+            Please log in as soon as possible and change your password for security. If you have any issues accessing your account, contact IT support.
+        </p>
+        <div class="footer">
+            Best regards,<br>
+            HR & IT Team
+            <br>
+            <br>
+             &copy; {{ current_year }} Vartek Services. All rights reserved.
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Account Creation Error Notification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 32px;
+        }
+        h2 {
+            color: #d9534f;
+        }
+        .details {
+            background: #f2dede;
+            border-left: 4px solid #d9534f;
+            padding: 16px;
+            margin: 24px 0;
+            border-radius: 4px;
+        }
+        .footer {
+            font-size: 0.9em;
+            color: #888;
+            margin-top: 32px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Account Creation Error</h2>
+        <p>Hello,</p>
+        <p>
+            An error occured while creating an account for below user : Fullname: {{fname}} {{lname}}\nPlease check the event log which is located in the log folder of this application for details\n\nThank you"
+            <table style="width:100%; border-collapse: collapse; margin: 16px 0;">
+                <tr style="background-color: #f5f5f5;">
+                    <th style="text-align:left; padding:8px; border-bottom:1px solid #ddd;">Field</th>
+                    <th style="text-align:left; padding:8px; border-bottom:1px solid #ddd;">Value</th>
+                </tr>
+                <tr>
+                    <td style="padding:8px; border-bottom:1px solid #eee;">First Name</td>
+                    <td style="padding:8px; border-bottom:1px solid #eee;">{{new_hire_fname}}</td>
+                </tr>
+                <tr>
+                    <td style="padding:8px; border-bottom:1px solid #eee;">Last Name</td>
+                    <td style="padding:8px; border-bottom:1px solid #eee;">{{new_hire_lname}}</td>
+                </tr>
+                <tr>
+                    <td style="padding:8px; border-bottom:1px solid #eee;">Job Role</td>
+                    <td style="padding:8px; border-bottom:1px solid #eee;">{{new_hire_jrole}}</td>
+                </tr>
+                <tr>
+                    <td style="padding:8px; border-bottom:1px solid #eee;">Department</td>
+                    <td style="padding:8px; border-bottom:1px solid #eee;">{{new_hire_dpart}}</td>
+                </tr>
+                 <tr>
+                    <td style="padding:8px; border-bottom:1px solid #eee;">AD Groups</td>
+                    <td style="padding:8px; border-bottom:1px solid #eee;">{{new_hire_adgroups}}</td>
+                </tr>
+                 <tr>
+                    <td style="padding:8px; border-bottom:1px solid #eee;">OU</td>
+                    <td style="padding:8px; border-bottom:1px solid #eee;">{{new_hire_ou}}</td>
+                </tr>
+            </table>
+        </p>
+        <div class="details">
+            <strong>Error Details:</strong><br>
+            {{ error_message }}
+        </div>
+        <p>
+            Please review the information you provided and try again. If you continue to experience issues, contact our support team for assistance.
+        </p>
+        <div class="footer">
+            Thank you,<br>
+            The Support Team
+            <br>
+            <br>
+             &copy; {{ current_year }} Vartek Services. All rights reserved.
+        </div>
+    </div>
+</body>
+</html>

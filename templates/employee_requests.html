@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>New Employee IT Request</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; background: #fafafa; }
+        h2 { color: #2c3e50; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; }
+        .footer { margin-top: 20px; font-size: 0.9em; color: #888; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>New Employee IT Request</h2>
+        <p>Dear IT Department,</p>
+        <p>Please assist with the following IT requirements for our new employee:</p>
+        <table>
+            <tr>
+                <th>Employee Name</th>
+                <td>{{ new_hire_fname }}, {{ new_hire_lname}}</td>
+            </tr>
+            <tr>
+                <th>Department</th>
+                <td>{{ new_hire_dpart }}</td>
+            </tr>
+            <tr>
+                <th>Job Role</th>
+                <td>{{ new_hire_jrole }}</td>
+            </tr>
+            <tr>
+                <th>Laptop Preference</th>
+                <td>{{ laptop_preference }}</td>
+            </tr>
+            <tr>
+                <th>Google Shared Drive</th>
+                <td>{{ googleSharedDrive }}</td>
+            </tr>
+            <tr>
+                <th>Local Shared Drive</th>
+                <td>{{ localSharedDrive }}</td>
+            </tr>
+            <tr>
+                <th>Need Phone</th>
+                <td>{{ needPhoneExtension }}</td>
+            </tr>
+            <tr>
+                <th>if Yes, Phone Extension</th>
+                <td>{{ phoneExtension }}</td>
+            </tr>
+        </table>
+
+
+        <p>Please confirm when setup is complete or if further information is required.</p>
+        <div class="footer">
+            Thank you,<br>
+            HR Team
+            <br>
+            <br>
+             &copy; {{ current_year }} Vartek Services. All rights reserved.
+        </div>
+    </div>
+</body>
+</html>
