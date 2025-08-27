@@ -164,7 +164,7 @@ def readSheet(response_sheet):
                             logging.info(f"Sending account information to new hire personal email: {personal_email}")
                             # Send an email to ERC Team when there is an error
                             send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year,
-                                                          "username": f"CSG\{newemail.split('@')[0]}", "email": newemail, "password": passw}, 
+                                                          "username": f"CSG\\{newemail.split('@')[0]}", "email": newemail, "password": passw}, 
                                                 recipient=personal_email, subject="Account Information from CSG",template_name="new_hire_account_notification.html", with_attachment=False)
                      
                             # Notify the employee who made the entry
@@ -176,7 +176,7 @@ def readSheet(response_sheet):
                         else:
                             logging.warning(f"No personal email provided for new hire {firstName} {lastName}. Cannot send account information.")
                             # Send an email to ERC Team when there is an error
-                            send_email_notification(data={"current_year": datetime.now().year,"username": f"CSG\{newemail.split('@')[0]}", "email": newemail, "password": passw,
+                            send_email_notification(data={"current_year": datetime.now().year,"username": f"CSG\\{newemail.split('@')[0]}", "email": newemail, "password": passw,
                                                           "employee_name": f"{firstName} {lastName}", "new_hire_jrole": jobRole, "new_hire_dpart": department}, 
                                                 recipient=curEmpEmail, subject=f"Account for {firstName} {lastName}  Completed Successfully",template_name="no_personal_email.html", with_attachment=False,cc=adminAlerts)
                         
@@ -255,9 +255,9 @@ def password():
         return ''.join(random.choice(characters) for _ in range(length))
     
 
-    if os.path.exists(r'config\dictionary'):
+    if os.path.exists(rf'config{dir_nav}dictionary'):
         # If dictionary file exists, read from it
-        with open('config\dictionary', 'r', encoding='utf-16') as f:
+        with open(rf'config{dir_nav}dictionary', 'r', encoding='utf-16') as f:
             words = f.read().splitlines()
 
         if words:
