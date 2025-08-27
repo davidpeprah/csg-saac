@@ -5,7 +5,7 @@
 #
 
 from __future__ import print_function
-import pickle, pdb
+import pickle, pdb, re
 import os.path
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -84,8 +84,10 @@ def readSheet(response_sheet):
 
                 
                 #Get AD groups
-                adgrps = ADGroups(jobRole, department)
-                adorganizationalunit = ''
+                jobrole_ = "".join(re.split('[^a-zA-Z0-9]+', jobRole.lower()))
+                department_ = "".join(re.split('[^a-zA-Z0-9]+', department.lower()))
+                adgrps = ADGroups(jobrole_, department_)
+                adorganizationalunit = organizationalUnit(jobrole_, department_)
                 
                 # Send Data to Powershell
                 logging.debug(f"Creating account for {fname} {lname} AD groups: {adgrps}, Job Role: {jobRole}, Department: {department}, OU: {adorganizationalunit}")
@@ -96,8 +98,8 @@ def readSheet(response_sheet):
                                               "-LastName", lname,
                                               "-jobrole", jobRole.lower(),
                                               "-department", department.lower(),
-                                              "-adgroups", adgrps,
-                                              "-oupath", adorganizationalunit,
+                                              "-adgroups", f"'{adgrps}'",
+                                              "-oupath", f"'{adorganizationalunit}'",
                                               "-jobtitle", jobTitle,
                                               "testing", testing], stdout=subprocess.PIPE)
 
@@ -288,30 +290,52 @@ def password():
     return(password)
 
     
-def ADGroups(jobtitle, department):
+def ADGroups(jobrole, department):
 
-     groups = config.get('DefaultGroups', 'defaultGroups') if (config.get('DefaultGroups', 'defaultGroups')) else ''
-    
-     grpsbyJobTitle = groupsbyJobTitle(jobtitle)
-    
-     grpsbyDepartment = groupsbyDepartment(department)
-     
-     return ",".join([groups,grpsbyJobTitle,grpsbyDepartment])
+    defaultgroups = config.get('DefaultGroups', 'defaultGroups') if (config.get('DefaultGroups', 'defaultGroups')) else ''
+    if defaultgroups: defaultgroups = [grp.strip() for grp in defaultgroups.split(',')]
+
+    grpsbyJobRole = groupsbyJobRole(jobrole)
+    if grpsbyJobRole: grpsbyJobRole = [grp.strip() for grp in grpsbyJobRole.split(',')]
+
+    grpsbyDepartment = groupsbyDepartment(department)
+    if grpsbyDepartment: grpsbyDepartment = [grp.strip() for grp in grpsbyDepartment.split(',')]
+
+    logging.debug(f"Default Groups: {defaultgroups}, Groups by Job Role: {grpsbyJobRole}, Groups by Department: {grpsbyDepartment}")
+    return ",".join([defaultgroups,grpsbyJobRole,grpsbyDepartment])
 
 
-def groupsbyJobTitle(Jobtitle):
-    if config.options('GroupsbyJobTitle'):
-        if Jobtitle.lower() in config.options('GroupsbyJobTitle'):
-            return config.get('GroupsbyJobTitle', Jobtitle)
+def groupsbyJobRole(jobrole):
+    logging.debug(f"Looking up groups for job role: {jobrole}")
+    if config.options('GroupsbyJobRole'):
+        if jobrole.lower() in config.options('GroupsbyJobRole'):
+            logging.debug(f"Found groups for job role: {jobrole}")
+            return config.get('GroupsbyJobRole', jobrole)
+    logging.debug(f"No groups found for job role: {jobrole}")
     return ''
 
 
 def groupsbyDepartment(department):
+    logging.debug(f"Looking up groups for department: {department}")
     if config.options('GroupsbyDepartment'):
         if department.lower() in config.options('GroupsbyDepartment'):
+            logging.debug(f"Found groups for department: {department}")
             return config.get('GroupsbyDepartment', department)
+    logging.debug(f"No groups found for department: {department}")
     return ''
 
+def organizationalUnit(jobrole, department):
+    departmentJobrole = f"{department.lower()}{jobrole.lower()}"
+    logging.debug(f"Looking up OU for combined department and job role: {departmentJobrole}")
+    if config.options('OrganizationalUnit'):
+        if departmentJobrole.lower() in config.options('OrganizationalUnit'):
+            logging.debug(f"Found OU for combined department and job role: {departmentJobrole}")
+            return config.get('OrganizationalUnit', jobrole)
+        elif jobrole.lower() in config.options('OrganizationalUnit'):
+            logging.debug(f"Found OU for job role: {jobrole}")
+            return config.get('OrganizationalUnit', jobrole)
+    logging.debug(f"No OU found for job role: {jobrole} or combined department and job role: {departmentJobrole}")  
+    return ''
 
 def send_email_notification(data: dict = None, recipient: str = None, subject: str = " ", file_path: str = None, file_name: str = None, template_name: str = None, with_attachment: bool = False, message: str = "TESTING EMAIL NOTIFICATION", cc: str = None):
     
@@ -514,6 +538,7 @@ if __name__ == '__main__':
             logging.critical("Service account email is missing in the configuration file.")
             sys.exit(1)
         adminAlerts = config.get('admin', 'adminAlerts', fallback=admin)
+        adminAlerts = [f"{email}@{domain}" if "@" not in email else email for email in adminAlerts.split(',')]
         logging.debug(f"Authorized Users: {authUsers}, Domain: {domain}, Admin: {admin}, Open Ticket: {openticket}, Service Account Email: {srvAccEmail}, Admin Alerts: {adminAlerts}")
         logging.info("Authorized users and domain loaded successfully.")
     else:
