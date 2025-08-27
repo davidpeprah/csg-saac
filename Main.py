@@ -23,6 +23,12 @@ from lib.sendEmail import sendMessage, CreateMessageWithAttachment
 # set up the Jinja2 environment to load templates from the 'templates' directory
 env = Environment(loader=FileSystemLoader('templates'))
 
+# Check log file and create it if it does not exist
+def check_log_file(filepath: str):
+    if not os.path.exists(filepath):
+        os.makedirs(os.path.dirname(filepath))
+        with open(fr"{filepath}", "w") as file: 
+            pass
 
 
 def readSheet(response_sheet):
@@ -467,7 +473,7 @@ if __name__ == '__main__':
     logLevel = config.get('logs', 'logLevel' , fallback='INFO')
     logFile = config.get('logs', 'logFile', fallback=f'logs{dir_nav}csg-saac.log')
 
-
+    check_log_file(logFile)
     
     parser = argparse.ArgumentParser(prog='CSG-SAAC',
                                      description='New Staff Onboarding and Account Creation Script',
