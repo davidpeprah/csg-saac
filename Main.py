@@ -263,9 +263,9 @@ def password():
         return ''.join(random.choice(characters) for _ in range(length))
     
 
-    if os.path.exists(rf'config{dir_nav}dictionary'):
+    if os.path.exists(f'config{dir_nav}dictionary'):
         # If dictionary file exists, read from it
-        with open(rf'config{dir_nav}dictionary', 'r', encoding='utf-16') as f:
+        with open(f'config{dir_nav}dictionary', 'r', encoding='utf-16') as f:
             words = f.read().splitlines()
 
         if words:
@@ -425,11 +425,11 @@ def load_credentials_access():
         else:
             logging.debug("No valid credentials found, initiating authorization flow...")
             # If there are no valid credentials available, let the user log in.
-            flow = InstalledAppFlow.from_client_secrets_file('config{dir_nav}app_auth.json', SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(f'config{dir_nav}app_auth.json', SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
         with open(f'config{dir_nav}token.pickle', 'wb') as token:
-            logging.debug("Saving credentials to config{dir_nav}token.pickle")
+            logging.debug(f"Saving credentials to config{dir_nav}token.pickle")
             # Save the credentials as a pickle file
             pickle.dump(creds, token)
     # Build the service object for the Sheets API
@@ -509,9 +509,6 @@ if __name__ == '__main__':
                                 ]
                 )
         
-    
-  
-
 
     if 'Document' not in config.sections() or 'admin' not in config.sections():
        logging.critical("Configuration file is missing required sections: 'Document' or 'admin'")
