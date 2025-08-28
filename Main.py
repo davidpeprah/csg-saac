@@ -63,7 +63,6 @@ def readSheet(response_sheet):
             otherInfo = row[12]
             curEmpEmail = row[13].lower()
             entryType = row[14]
-            newemail = row[16]
             
             if testing:
                 logging.debug("Running in testing mode, no changes will be made to the AD.")
@@ -121,12 +120,7 @@ def readSheet(response_sheet):
                     UpdateMail(response_sheet,row_count,email)
                     UpdateEntryType(response_sheet,row_count,message)
 
-                    laptop_preference = row[7]
-                    googleSharedDrive = row[8]
-                    localSharedDrive = row[9]
-                    needPhoneExtension = row[10]
-                    phoneExtension = row[11]
-                    otherInfo = row[12]
+                    
                     # Send email notification other information to the IT department to set up laptop, phone extension etc
                     logging.debug(f"Sending new hire IT request email to {adminAlerts} for {fname} {lname}")
                     send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": email, 
@@ -145,14 +139,15 @@ def readSheet(response_sheet):
                                                   "new_hire_jrole": jobRole, "new_hire_dpart": department, "new_hire_adgroups": adgrps, "new_hire_ou": adorganizationalunit}, 
                                                 recipient=admin, subject="Account Creation Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
                                                                                        
-            elif row[10] == "Pending":
+            elif entryType == "Pending":
                 logging.info(f"Processing pending account for: {fname} {lname}, Job Role: {jobRole}, Department: {department}")
                 
                 personal_email = str(pEmail)
                 firstName = str(fname)
                 lastName = str(lname)
                 EmpEmail = str(curEmpEmail)
-                
+                newemail = row[16]
+
                 try:
                     check = checkUser(newemail)
                     
@@ -308,7 +303,7 @@ def ADGroups(jobrole, department):
     if grpsbyDepartment: grpsbyDepartment = [grp.strip() for grp in grpsbyDepartment.split(',')]
 
     logging.debug(f"Default Groups: {defaultgroups}, Groups by Job Role: {grpsbyJobRole}, Groups by Department: {grpsbyDepartment}")
-    return ",".join([defaultgroups,grpsbyJobRole,grpsbyDepartment])
+    return ",".join(defaultgroups+grpsbyJobRole+grpsbyDepartment])
 
 
 def groupsbyJobRole(jobrole):
@@ -333,13 +328,13 @@ def groupsbyDepartment(department):
 def organizationalUnit(jobrole, department):
     departmentJobrole = f"{department.lower()}{jobrole.lower()}"
     logging.debug(f"Looking up OU for combined department and job role: {departmentJobrole}")
-    if config.options('OrganizationalUnit'):
-        if departmentJobrole.lower() in config.options('OrganizationalUnit'):
+    if config.options('OrganizationalUnits'):
+        if departmentJobrole.lower() in config.options('OrganizationalUnits'):
             logging.debug(f"Found OU for combined department and job role: {departmentJobrole}")
-            return config.get('OrganizationalUnit', jobrole)
-        elif jobrole.lower() in config.options('OrganizationalUnit'):
+            return config.get('OrganizationalUnits', jobrole)
+        elif jobrole.lower() in config.options('OrganizationalUnits'):
             logging.debug(f"Found OU for job role: {jobrole}")
-            return config.get('OrganizationalUnit', jobrole)
+            return config.get('OrganizationalUnits', jobrole)
     logging.debug(f"No OU found for job role: {jobrole} or combined department and job role: {departmentJobrole}")  
     return ''
 
