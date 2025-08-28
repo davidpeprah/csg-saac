@@ -100,15 +100,15 @@ def readSheet(response_sheet):
                 logging.debug(f"Creating account for {fname} {lname} AD groups: {adgrps}, Job Role: {jobRole}, Department: {department}, OU: {adorganizationalunit}")
                 
                 createAcc = subprocess.Popen(["Powershell.exe", "-File", r"lib\setAcc.ps1",
-                                              "-FirstName", fname,
-                                              "-MiddleName", mname,
-                                              "-LastName", lname,
-                                              "-jobrole", jobRole.lower(),
-                                              "-department", department.lower(),
+                                              "-FirstName", f"'{fname}'",
+                                              "-MiddleName", f"'{mname}'",
+                                              "-LastName", f"'{lname}'",
+                                              "-jobrole", f"'{jobRole.lower()}'",
+                                              "-department", f"{department.lower()}",
                                               "-adgroups", f"'{adgrps}'",
                                               "-oupath", f"'{adorganizationalunit}'",
-                                              "-jobtitle", jobTitle,
-                                              "testing", pwshell], stdout=subprocess.PIPE)
+                                              "-jobtitle", f"'{jobTitle}'",
+                                              "testing", f"'{pwshell}'"], stdout=subprocess.PIPE)
 
                 # Read Information from Powershell
                 message = str(createAcc.communicate()[0][:-2], 'utf-8')

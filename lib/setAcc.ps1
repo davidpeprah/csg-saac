@@ -107,7 +107,7 @@ function Get-fullname {
         [string]$lastName
     )
     if ($MiddleName) {
-        return "$firstName $MiddleName[0] $lastName"
+        return $firstName + ' ' + $MiddleName[0] + ' ' + $lastName
     }
    return "$firstName $lastName"
 }
