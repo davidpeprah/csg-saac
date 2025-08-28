@@ -71,7 +71,7 @@ function check-OUpath {
         [string]$oupath
     )
 
-    $OU = Get-ADOrganizationalUnit -Filter {Name -eq $oupath} | Select -ExpandProperty DistinguishedName
+    $OU = Get-ADOrganizationalUnit -Filter {DistinguishedName -eq $oupath} | Select -ExpandProperty DistinguishedName
     if (-not $OU) {
         return $false
     }
@@ -120,7 +120,7 @@ try{
     Remove leading and trailing spaces from building, position, and stafftype
     #>
     $SamAccountName = Get-SamAccountNm -firstName $FirstName -middleName $MiddleName -lastName $LastName
-    if (-not $SamAccountName) {
+    if (-not ($SamAccountName)) {
         "$Time Could not create an account for $FirstName $MiddleName $LastName. The proposed username is not available" | out-file logs\event_log.log -append
         return (2, ' ', "Could not create account, $Time Could not create an account for $FirstName $MiddleName $LastName. The proposed username is not available")
     }
@@ -129,7 +129,7 @@ try{
     $fullName = Get-fullname -firstName $FirstName -middleName $MiddleName -lastName $LastName
     
     $oupath = check-OUpath -oupath $oupath
-    if (-not $oupath) {
+    if (-not ($oupath)) {
         "$Time The OU path $oupath does not exist in Active Directory. Please check with your AD Administrator" | out-file logs\event_log.log -append
         return (2, $emailAddress, "Could not create account, $Time The OU path $oupath does not exist in Active Directory. Please check with your AD Administrator")
     }
