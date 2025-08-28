@@ -48,21 +48,21 @@ def readSheet(response_sheet):
     for row in values:
         logging.debug(f"Processing row {row_count}: {row}")
         try:
-            fname = row[1].title()
-            mname = row[2].title()
-            lname = row[3].title()
-            pEmail = row[4]
-            department = row[5].lower()
-            jobTitle = row[6].title()
-            jobRole = row[15].lower()
-            laptop_preference = row[7]
-            googleSharedDrive = row[8]
-            localSharedDrive = row[9]
-            needPhoneExtension = row[10]
-            phoneExtension = row[11]
-            otherInfo = row[12]
-            curEmpEmail = row[13].lower()
-            entryType = row[14]
+            fname = row[1].title().strip()
+            mname = row[2].title().strip()
+            lname = row[3].title().strip()
+            pEmail = row[4].strip()
+            department = row[5].lower().strip()
+            jobTitle = row[6].title().strip()
+            jobRole = row[15].lower().strip()
+            laptop_preference = row[7].strip()
+            googleSharedDrive = row[8].strip()
+            localSharedDrive = row[9].strip()
+            needPhoneExtension = row[10].strip()
+            phoneExtension = row[11].strip()
+            otherInfo = row[12].strip()
+            curEmpEmail = row[13].lower().strip()
+            entryType = row[14].strip()
             
             pwshell = "$false"
             if testing:

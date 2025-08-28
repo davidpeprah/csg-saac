@@ -9,11 +9,11 @@
 
 # Parameters
 param (
-    [string]$FirstName.trim(),
-    [string]$MiddleName.trim(),
-    [string]$LastName.trim(),
+    [string]$FirstName,
+    [string]$MiddleName,
+    [string]$LastName,
     [string]$jobrole,
-    [string]$department.trim(),
+    [string]$department,
     [string]$adgroups,
     [string]$oupath,
     [string]$jobtitle,
