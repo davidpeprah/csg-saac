@@ -45,7 +45,7 @@ function SamAccountNm($lastName, $MiddleName, $firstName) {
     else {
 
     if $MiddleName {
-        $proposeAccName = ($firstName[0] + $MiddleName[0}
+        $proposeAccName = ($firstName[0] +) $MiddleName[0] + $lastName).ToLower()
         
         if (-Not(get-aduser -Filter {SamAccountName -eq $proposeAccName})){
             return $proposeAccName
