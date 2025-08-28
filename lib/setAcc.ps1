@@ -71,10 +71,11 @@ function check-OUpath {
         [string]$oupath
     )
 
-    if (-not (Get-ADOrganizationalUnit -Filter "DistinguishedName -eq '$oupath'" -ErrorAction SilentlyContinue)) {
+    $OU = Get-ADOrganizationalUnit -Filter {Name -eq $oupath} | Select -ExpandProperty DistinguishedName
+    if (-not $OU) {
         return $false
     }
-    return $true 
+    return $OU 
 }
 
 function checkGrp{
@@ -146,7 +147,7 @@ try{
     if ($jobrole -eq "faculty") {
         $homeDirectory = "\\csgfs01\faculty\$SamAccountName"
     }
-    
+
     # Groups
     $ADgrps = $adgroups.split(",")
 
@@ -161,7 +162,15 @@ try{
         -Path $oupath -EmailAddress $emailAddress -Description $description -Company "Columbus School For Girls" `
         -Department $department -Title $jobtitle -PasswordNeverExpires $True -Enabled $True -WhatIf
 
-        return (1, $emailAddress, "Testing mode is enabled. $? details information: $fullname, $SamAccountName, $userPrincipalName, $homeDirectory, $oupath, $emailAddress, $description, $department, $jobtitle, $ADgrps")
+        $unknowngroups = @()
+        # Add user account to default Group
+        forEach ($grp in $ADgrps) {
+    
+            if (-not (checkGrp $grp)) {
+                $unknowngroups += $grp
+            }
+        }   
+        return (1, $emailAddress, "Testing mode is enabled. $? details information: $fullname, $SamAccountName, $userPrincipalName, $homeDirectory, $oupath, $emailAddress, $description, $department, $jobtitle, $ADgrps, Unknown Groups: $unknowngroups")
     }
 
     New-ADUser -Name $fullName -GivenName $FirstName -Surname $LastName -DisplayName $fullName `

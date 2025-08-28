@@ -48,10 +48,13 @@ def sendMessage(user_id, message, dir_nav):
 
     try:
         message = (service.users().messages().send(userId=user_id, body=message).execute())
+        return ('success', message)
         
-        return message
     except errors.HttpError as error:
-        logging.exception(error)
+        return ('failed', error)
+    
+    except Exception as e:
+      return ('failed', f"Email notification failed, {str(e)}")
 
 
 
