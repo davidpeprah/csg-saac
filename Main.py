@@ -303,7 +303,7 @@ def ADGroups(jobrole, department):
     if grpsbyDepartment: grpsbyDepartment = [grp.strip() for grp in grpsbyDepartment.split(',')]
 
     logging.debug(f"Default Groups: {defaultgroups}, Groups by Job Role: {grpsbyJobRole}, Groups by Department: {grpsbyDepartment}")
-    return ",".join(defaultgroups+grpsbyJobRole+grpsbyDepartment])
+    return ",".join(defaultgroups+grpsbyJobRole+grpsbyDepartment)
 
 
 def groupsbyJobRole(jobrole):
@@ -472,11 +472,9 @@ if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(prog='CSG-SAAC',
                                      description='New Staff Onboarding and Account Creation Script',
-                                     epilog='This script is used to onboard new staff and create accounts in G-Suite and Active Directory. ' \
-                                     'It reads data from a Google Sheet and performs actions based on the data provided.',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-lL', '--logLevel', default=None, type=str, help='Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)')
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s 1.0.0', help='Show the program version')
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s 1.0.1', help='Show the program version')
     parser.add_argument('-t', '--testing', action='store_true', help='For testing purposes only, do not use in production')
 
     args = parser.parse_args()
