@@ -44,8 +44,8 @@ function SamAccountNm($lastName, $MiddleName, $firstName) {
     } 
     else {
 
-    if $MiddleName {
-        $proposeAccName = ($firstName[0] +) $MiddleName[0] + $lastName).ToLower()
+    if ($MiddleName) {
+        $proposeAccName = ($firstName[0] + $MiddleName[0] + $lastName).ToLower()
         
         if (-Not(get-aduser -Filter {SamAccountName -eq $proposeAccName})){
             return $proposeAccName
@@ -73,14 +73,14 @@ function OUPath($oupath) {
 function checkGrp($grpname){
 
    try {
-    if $grpname.endswith("@columbusschoolforgirls.org") {
-        try {
-            get-adgroup -Filter "mail -eq '$grpname'"
-            return $true
-        } catch {
-            return $false
-        }    
-    } 
+        if ($grpname.endswith("@columbusschoolforgirls.org")) {
+            try {
+                get-adgroup -Filter "mail -eq '$grpname'"
+                return $true
+            } catch {
+                return $false
+            }    
+        } 
      Get-ADGroup $grpname
         return $true
    } catch {
@@ -121,7 +121,8 @@ $password = ("P@ssw0rd@!!").ToString() # This password will change once the acco
 $description = $jobtitle
 $userPrincipalName = "$SamAccountName@columbusschoolforgirls.org"
 $homeDirectory = "\\csgfs01\administration\$SamAccountName"
-if $jobrole -eq "faculty" {
+
+if ($jobrole -eq "faculty") {
     $homeDirectory = "\\csgfs01\faculty\$SamAccountName"
 }
 
@@ -132,7 +133,7 @@ $ADgrps = $adgroups.split(",")
 
  #"$Time $fullName, $password, $SamAccountName, $userPrincipalName, $building, $department, $path, " | out-file logs\event_log.log -append
  # Create User Account
- if $testing {
+ if ($testing) {
 
     "$Time Testing mode is enabled. No changes will be made to Active Directory" | out-file logs\event_log.log -append
      New-ADUser -Name $fullName -GivenName $FirstName -Surname $LastName -DisplayName $fullName `
@@ -166,7 +167,7 @@ $ADgrps = $adgroups.split(",")
 
   "$Time Account was successfully created for $fullName" | out-file logs\event_log.log -append
 
-if $unknowngroups.Count -gt 0 {
+if ($unknowngroups.Count -gt 0) {
     $unknowngroupslist = $unknowngroups -join ","
     "$Time However, the following groups do not exist in Active Directory: $unknowngroupslist. Please check with your AD Administrator" | out-file logs\event_log.log -append
     return (1, $emailAddress, "Account Successfully Created in Active Directory but the following groups do not exist in Active Directory: $unknowngroupslist. Please check with your AD Administrator")
