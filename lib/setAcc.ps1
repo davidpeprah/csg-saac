@@ -116,7 +116,11 @@ if (-not $oupath) {
    return (2, $emailAddress, "Could not create account, $Time The OU path $oupath does not exist in Active Directory. Please check with your AD Administrator")
 }
 
-$initials = $MiddleName[0] if $MiddleName else "" 
+$middleInitial = ''
+if ($MiddleName) {
+    $middleInitial = $MiddleName[0].ToUpper()
+}
+
 $password = ("P@ssw0rd@!!").ToString() # This password will change once the account is confirmed in Google console
 $description = $jobtitle
 $userPrincipalName = "$SamAccountName@columbusschoolforgirls.org"
@@ -137,7 +141,7 @@ $ADgrps = $adgroups.split(",")
 
     "$Time Testing mode is enabled. No changes will be made to Active Directory" | out-file logs\event_log.log -append
      New-ADUser -Name $fullName -GivenName $FirstName -Surname $LastName -DisplayName $fullName `
-    -initials $initials -AccountPassword (ConvertTo-SecureString -AsPlainText $password -Force) `
+    -initials $middleInitial -AccountPassword (ConvertTo-SecureString -AsPlainText $password -Force) `
     -SamAccountName $SamAccountName -UserPrincipalName $userPrincipalName -HomeDrive "H:" -HomeDirectory $homeDirectory `
     -Path $oupath -EmailAddress $emailAddress -Description $description -Company "Columbus School For Girls" `
     -Department $department -Title $jobtitle -PasswordNeverExpires $True -Enabled $True -WhatIf
@@ -146,7 +150,7 @@ $ADgrps = $adgroups.split(",")
  }
 
  New-ADUser -Name $fullName -GivenName $FirstName -Surname $LastName -DisplayName $fullName `
- -initials $initials -AccountPassword (ConvertTo-SecureString -AsPlainText $password -Force) `
+ -initials $middleInitial -AccountPassword (ConvertTo-SecureString -AsPlainText $password -Force) `
  -SamAccountName $SamAccountName -UserPrincipalName $userPrincipalName -HomeDrive "H:" -HomeDirectory $homeDirectory `
  -Path $oupath -EmailAddress $emailAddress -Description $description -Company "Columbus School For Girls" `
  -Department $department -Title $jobtitle -PasswordNeverExpires $True -Enabled $True
