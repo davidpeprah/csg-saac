@@ -362,7 +362,7 @@ def send_email_notification(data: dict = None, recipient: str = None, subject: s
                 logging.debug(f"Email recipient: {recipient}")
                 try:
                     send_email_message = sendMessage('me', CreateMessageWithAttachment(srvAccEmail, recipient, 
-                                                                                subject, rendered_email, file_dir=file_path, filename=file_name, cc=cc))
+                                                                                subject, rendered_email, file_dir=file_path, filename=file_name, cc=cc), dir_nav)
                   
                 except Exception as e:
                     logging.exception(f"Failed to send email notification with attachment: {e}")
@@ -381,7 +381,7 @@ def send_email_notification(data: dict = None, recipient: str = None, subject: s
             logging.debug(f"Email recipient: {recipient}")
             try:
                 send_email_message = sendMessage('me', CreateMessageWithAttachment(srvAccEmail, recipient, 
-                                                                                    subject, rendered_email))
+                                                                                    subject, rendered_email), dir_nav)
             except Exception as e:
                 logging.exception(f"Failed to send email notification: {e}")
 

@@ -22,7 +22,7 @@ SCOPES = ['https://www.googleapis.com/auth/gmail.send']
 
 
 
-def sendMessage(user_id, message):
+def sendMessage(user_id, message, dir_nav):
     """Shows basic usage of the Gmail API.
     Lists the user's Gmail labels.
     """
@@ -30,18 +30,18 @@ def sendMessage(user_id, message):
     # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-    if os.path.exists(r'credentials\token.pickle'):
-        with open(r'credentials\token.pickle', 'rb') as token:
+    if os.path.exists(f'config{dir_nav}token.pickle'):
+        with open(f'config{dir_nav}token.pickle', 'rb') as token:
             creds = pickle.load(token)
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(r'credentials\credentials.json', SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(f'config{dir_nav}credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
-        with open(r'credentials\token.pickle', 'wb') as token:
+        with open(f'config{dir_nav}token.pickle', 'wb') as token:
             pickle.dump(creds, token)
 
     service = build('gmail', 'v1', credentials=creds)
