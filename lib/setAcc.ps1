@@ -136,7 +136,7 @@ try{
 
     $middleInitial = ''
     if ($MiddleName) {
-        $middleInitial = $MiddleName[0].ToUpper()
+        $middleInitial = [Char]::ToUpper($MiddleName[0])
     }
 
     $password = ("P@ssw0rd@!!").ToString() # This password will change once the account is confirmed in Google console
