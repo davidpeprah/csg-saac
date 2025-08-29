@@ -86,14 +86,20 @@ function checkGrp{
    try {
         if ($grpname.endswith("@columbusschoolforgirls.org")) {
             try {
-                get-adgroup -Filter "mail -eq '$grpname'"
-                return $true
+                $adgroup = get-adgroup -Filter {mail -eq $grpname} | Select -ExpandProperty SamAccountName
+                if ($adgroup) {
+                    return $adgroup
+                }
             } catch {
                 return $false
             }    
         } 
-     Get-ADGroup $grpname
-        return $true
+     $adgroup = Get-ADGroup $grpname | Select -ExpandProperty SamAccountName
+     if ($adgroup) {
+        return $adgroup
+     } else {
+        return $false
+     }  
    } catch {
      return $false
    }
@@ -183,14 +189,14 @@ try{
     $unknowngroups = @()
     # Add user account to default Group
     forEach ($grp in $ADgrps) {
-    
-    if (checkGrp $grp) {
-        
-            Add-ADGroupMember $grp -members $SamAccountName
-        
-        } else {
-            $unknowngroups += $grp
-        }
+        $grpSamAccountName = checkGrp $grp
+        if ($grpSamAccountName) {
+            
+                Add-ADGroupMember $grpSamAccountName -members $SamAccountName
+            
+            } else {
+                $unknowngroups += $grp
+            }
     }
 
     "$Time Account was successfully created for $fullName" | out-file logs\event_log.log -append
