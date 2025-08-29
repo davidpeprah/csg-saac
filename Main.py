@@ -64,12 +64,12 @@ def readSheet(response_sheet):
             curEmpEmail = row[13].lower().strip()
             entryType = row[14].strip()
             
-            pwshell = "$false"
+            pwshell = "false"
             if testing:
                 logging.debug("Running in testing mode, no changes will be made to the AD.")
                 curEmpEmail = admin
                 adminAlerts = admin
-                pwshell = "$true"
+                pwshell = "true"
 
 
             if entryType == "NEW":

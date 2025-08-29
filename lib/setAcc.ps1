@@ -17,7 +17,7 @@ param (
     [string]$adgroups,
     [string]$oupath,
     [string]$jobtitle,
-    [string]$testing = "$false"
+    [string]$testing = "false"
 )
 
 
@@ -159,7 +159,7 @@ try{
 
     #"$Time $fullName, $password, $SamAccountName, $userPrincipalName, $building, $department, $path, " | out-file logs\event_log.log -append
     # Create User Account
-    if ($testing -eq "$true") {
+    if ($testing -eq "true") {
 
         "$Time Testing mode is enabled. No changes will be made to Active Directory" | out-file logs\event_log.log -append
         New-ADUser -Name $fullName -GivenName $FirstName -Surname $LastName -DisplayName $fullName `
