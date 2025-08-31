@@ -126,7 +126,7 @@ def readSheet(response_sheet):
                     # Send email notification other information to the IT department to set up laptop, phone extension etc
                     logging.debug(f"Sending new hire IT request email to {adminAlerts} for {fname} {lname}")
                     send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": email, 
-                                                  "new_hire_jrole": jobRole, "new_hire_dpart": department, "laptop_preference": laptop_preference, "googleSharedDrive": googleSharedDrive, 
+                                                  "new_hire_jrole": jobRole.title(), "new_hire_dpart": department.title(), "laptop_preference": laptop_preference, "googleSharedDrive": googleSharedDrive, 
                                                   "localSharedDrive": localSharedDrive, "needPhoneExtension": needPhoneExtension, "phoneExtension": phoneExtension, 
                                                   "otherInfo": otherInfo}, 
                                                 recipient=adminAlerts, subject="New Employee IT Request",template_name="employee_requests.html", with_attachment=False,cc=curEmpEmail)
@@ -151,18 +151,24 @@ def readSheet(response_sheet):
                 newemail = row[16]
 
                 try:
-                    check = checkUser(newemail)
+                    check = checkUser(newemail, dir_nav)
                     
-                    if check == newemail:
+                    if check.lower() == newemail.lower():
                         logging.info(f"Account for {fname} {lname} verified in G-Suite: {newemail}")
                         UpdateStatus(response_sheet,row_count,status_msg("0"),"Account Successfully confirm in G-Suite")
                         passw = password()
                         logging.debug(f"Resetting password for {newemail}")
-                        passReset = subprocess.Popen(["Powershell.exe", r'lib\resetPass.ps1 ' + newemail + ' ' + '"' + passw + '"' ], stdout=subprocess.PIPE)
+
+                        # Call Powershell script to reset password
+                        passReset = subprocess.Popen(["Powershell.exe", "-File", "lib\\resetPass.ps1",
+                                                                                "-Email", newemail,
+                                                                                "-NewPassword", passw 
+                                                                                ], stdout=subprocess.PIPE)
                         msg = str(passReset.communicate()[0][:-2], 'utf-8')
-                        status, user = msg.split('\r\n')
+                        status, update = msg.split('\r\n')
 
                         
+
                         #Send account information to the new staff personal email and notify the employee who made the entry
                         if (personal_email):
                             
@@ -185,7 +191,13 @@ def readSheet(response_sheet):
                                                           "employee_name": f"{firstName} {lastName}", "new_hire_jrole": jobRole, "new_hire_dpart": department}, 
                                                 recipient=curEmpEmail, subject=f"Account for {firstName} {lastName}  Completed Successfully",template_name="no_personal_email.html", with_attachment=False,cc=adminAlerts)
                         
-                        
+                        if (status == "1"):
+                            logging.error(f"Password reset failed: {update}")
+                            #Send email to development team
+                            send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": email, "error_message": update, 
+                                                  "new_hire_jrole": jobRole, "new_hire_dpart": department, "new_hire_adgroups": adgrps, "new_hire_ou": adorganizationalunit}, 
+                                                recipient=admin, subject="New Account Password Reset Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
+                    
                        
                 except HttpError as err:
                     if err.resp.status in [404,]:
@@ -381,7 +393,7 @@ def send_email_notification(data: dict = None, recipient: str = None, subject: s
             logging.debug(f"Email recipient: {recipient}")
             try:
                 send_email_message = sendMessage('me', CreateMessageWithAttachment(srvAccEmail, recipient, 
-                                                                                    subject, rendered_email), dir_nav)
+                                                                                    subject, rendered_email, cc=cc), dir_nav)
             except Exception as e:
                 logging.exception(f"Failed to send email notification: {e}")
 
@@ -458,7 +470,7 @@ if __name__ == '__main__':
     
     # define the directory navigation character based on the OS
     dir_nav = "\\" if platform.system() == 'Windows' else "//"
-
+    
     # Load Config file
     config = ConfigParser()
     config.read(f'config{dir_nav}config.ini')
@@ -469,7 +481,11 @@ if __name__ == '__main__':
     # Set default logging configuration
     logLevel = config.get('logs', 'logLevel' , fallback='INFO')
     logFile = config.get('logs', 'logFile', fallback=f'logs{dir_nav}csg-saac.log')
-
+     
+     # check if the log file path is valid for the current OS 
+    if dir_nav not in logFile:
+        logFile = logFile.replace("\\", dir_nav)
+        
     check_log_file(logFile)
     
     parser = argparse.ArgumentParser(prog='CSG-SAAC',
@@ -485,9 +501,7 @@ if __name__ == '__main__':
     logLevel = args.logLevel.upper() if args.logLevel else logLevel.upper()
     testing = args.testing
 
-    # check if the log file path is valid for the current OS 
-    if not dir_nav in logFile:
-        logFile = logFile.replace("//", dir_nav).replace("\\", dir_nav).replace("/", dir_nav)
+   
 
     # Set up logging configuration
     numeric_level = getattr(logging, logLevel)
@@ -527,6 +541,7 @@ if __name__ == '__main__':
 
     # Get authorized users and domains
     if (config.get('admin', 'AuthorizeUsers')):
+        pdb.set_trace()
         authUsers = list(config.get('admin', 'AuthorizeUsers', fallback='dpeprah').split(','))
         domain = config.get('admin', 'Domain')
         admin = config.get('admin', 'sysadmin',fallback='dpeprah@vartek.com')

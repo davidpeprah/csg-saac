@@ -43,25 +43,19 @@ function Get-SamAccountNm {
     $proposeAccName = ($firstName[0] + $lastName).ToLower()
 
     # this to make sure the samAccountName is not more than 21 characters
-  
-    if (-Not(get-aduser -Filter {SamAccountName -eq $proposeAccName})) {
-        return $proposeAccName
-    } 
-    else {
+    $SamAccountInfo =  get-Aduser -Filter {SamAccountName -eq $proposeAccName} -Properties SamAccountName | Select -ExpandProperty SamAccountName
+   
+    if (-not $SamAccountInfo) {return $proposeAccName}
 
-    if ($MiddleName) {
-        $proposeAccName = ($firstName[0] + $MiddleName[0] + $lastName).ToLower()
+    if ($middleName) {
+        $proposeAccName = ($firstName[0] + $middleName[0] + $lastName).ToLower()
+    
+        $SamAccountInfo =  get-Aduser -Filter {SamAccountName -eq $proposeAccName} -Properties SamAccountName | Select -ExpandProperty SamAccountName
         
-        if (-Not(get-aduser -Filter {SamAccountName -eq $proposeAccName})){
-            return $proposeAccName
-        } 
-     
+        if (-not $SamAccountInfo) {return $proposeAccName}
     }
-
-
+    return $false 
     }
-    return $false
-}
 
 <#
 This function returns OU path to be used to create a user.

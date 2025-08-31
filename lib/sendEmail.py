@@ -38,7 +38,7 @@ def sendMessage(user_id, message, dir_nav):
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(f'config{dir_nav}credentials.json', SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(f'config{dir_nav}app_auth.json', SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
         with open(f'config{dir_nav}token.pickle', 'wb') as token:

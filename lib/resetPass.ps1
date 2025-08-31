@@ -2,15 +2,18 @@
 #     Author: David Peprah
 #
 
+pram (
+    [string]$Email,
+    [string]$NewPassword
+)
 
 
 import-Module ActiveDirectory
 $Time= (Get-Date)
 
 Try {
-
-$workEmail = $args[0].ToString()
-$password = $args[1].ToString()
+$workEmail = $Email
+$password = $NewPassword
 
 $user = get-aduser -Filter {mail -eq $workEmail} -Properties SamAccountName | select -ExpandProperty SamAccountName
 
@@ -27,7 +30,7 @@ Set-ADAccountPassword -Identity $user -Reset -NewPassword (ConvertTo-SecureStrin
   
   
   # Return this information to python
-  return ("1", $user)
+  return ("1", $Time Password Reset failed $workEmail. Error Message: $ErrorMessage)
   
   Break
 }

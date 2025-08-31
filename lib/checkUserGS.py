@@ -10,7 +10,7 @@ from googleapiclient.errors import HttpError
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/admin.directory.user.readonly']
 
-def checkUser(email):
+def checkUser(email, dir_nav: str = "\\"):
     """Shows basic usage of the Admin SDK Directory API.
     Prints the emails and names of the first 10 users in the domain.
     """
@@ -19,18 +19,18 @@ def checkUser(email):
     # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-    if os.path.exists(r'credentials\token.pickle'):
-        with open(r'credentials\token.pickle', 'rb') as token:
+    if os.path.exists(f'config{dir_nav}token.pickle'):
+        with open(f'config{dir_nav}token.pickle', 'rb') as token:
             creds = pickle.load(token)
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(r'credentials\credentials.json', SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(f'config{dir_nav}app_auth.json', SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
-        with open(r'credentials\token.pickle', 'wb') as token:
+        with open(f'config{dir_nav}token.pickle', 'wb') as token:
             pickle.dump(creds, token)
 
     service = build('admin', 'directory_v1', credentials=creds)
@@ -52,4 +52,4 @@ def checkUser(email):
 
 
 if __name__ == '__main__':
-    print(checkUser('dpeprah@hcsdoh.org'))
+    pass
