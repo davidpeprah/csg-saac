@@ -64,12 +64,12 @@ def readSheet(response_sheet):
             curEmpEmail = row[13].lower().strip()
             entryType = row[14].strip()
             
-            pwshell = "false"
+            pwshell_testing = "false"
             if testing:
                 logging.debug("Running in testing mode, no changes will be made to the AD.")
                 curEmpEmail = admin
                 adminAlerts = admin
-                pwshell = "true"
+                pwshell_testing = "true"
 
 
             if entryType == "NEW":
@@ -108,7 +108,7 @@ def readSheet(response_sheet):
                                               "-adgroups", adgrps,
                                               "-oupath", adorganizationalunit,
                                               "-jobtitle", jobTitle,
-                                              "testing", pwshell], stdout=subprocess.PIPE)
+                                              "-testing", pwshell_testing], stdout=subprocess.PIPE)
 
                 # Read Information from Powershell
                 message = str(createAcc.communicate()[0][:-2], 'utf-8')
