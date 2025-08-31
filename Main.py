@@ -541,7 +541,6 @@ if __name__ == '__main__':
 
     # Get authorized users and domains
     if (config.get('admin', 'AuthorizeUsers')):
-        pdb.set_trace()
         authUsers = list(config.get('admin', 'AuthorizeUsers', fallback='dpeprah').split(','))
         domain = config.get('admin', 'Domain')
         admin = config.get('admin', 'sysadmin',fallback='dpeprah@vartek.com')
