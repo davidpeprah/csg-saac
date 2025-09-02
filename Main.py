@@ -141,7 +141,7 @@ def readSheet(response_sheet):
                     UpdateEntryType(response_sheet,row_count,update)
                     logging.error(f"Error creating account for {fname} {lname}: {update}")  
                     # Send an email to ERC Team when there is an error
-                    send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": email, "error_message": update, 
+                    send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": email, "error_message": update + f"<br> Additional Info: {other_output}", 
                                                   "new_hire_jrole": jobRole, "new_hire_dpart": department, "new_hire_adgroups": adgrps, "new_hire_ou": adorganizationalunit}, 
                                                 recipient=admin, subject="Account Creation Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
                                                                                        
@@ -217,7 +217,7 @@ def readSheet(response_sheet):
                             # Notify the new hire of their account information
                             send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year,
                                                         "username": f"CSG\\{newemail.split('@')[0]}", "email": newemail}, 
-                                                    recipient=adminAlerts, subject="New Account Password Reset Error",template_name="new_hire_account_notification.html", with_attachment=False, cc=curEmpEmail)
+                                                    recipient=adminAlerts, subject="New Account Password Reset Error",template_name="password_reset_failed.html", with_attachment=False, cc=curEmpEmail)
                     else:
                         logging.warning(f"Account for {fname} {lname} not found in G-Suite yet: {newemail}") 
                             
