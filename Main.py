@@ -111,16 +111,20 @@ def readSheet(response_sheet):
                                               "-testing", pwshell_testing], stdout=subprocess.PIPE)
 
                 # Read Information from Powershell
-                message = str(createAcc.communicate()[0][:-2], 'utf-8')
-                logging.debug(message)
-                status, email, update = message.split('\r\n')
-
+                response = str(createAcc.communicate()[0][:-2], 'utf-8')
+                logging.debug(response)
+                status, email, update, other_output = ""
+                res = response.split('\r\n')
+                status, email, update = res[-3], res[-2], res[-1]
+                if len(res) > 3:
+                    other_output = ";".join(res[:-4])
+                    logging.debug(f"Additional output from PowerShell script: {other_output}")
 
                 if (status == "1"):
                     logging.info(f"Account for {fname} {lname} created successfully: {email}")
                     UpdateStatus(response_sheet,row_count,status_msg(status),update)
                     UpdateMail(response_sheet,row_count,email)
-                    UpdateEntryType(response_sheet,row_count,message)
+                    UpdateEntryType(response_sheet,row_count,update)
 
                     
                     # Send email notification other information to the IT department to set up laptop, phone extension etc
@@ -134,7 +138,7 @@ def readSheet(response_sheet):
 
                 elif (status == "2"):
                     UpdateStatus(response_sheet,row_count,status_msg(status),update)
-                    UpdateEntryType(response_sheet,row_count,message)
+                    UpdateEntryType(response_sheet,row_count,update)
                     logging.error(f"Error creating account for {fname} {lname}: {update}")  
                     # Send an email to ERC Team when there is an error
                     send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": email, "error_message": update, 
@@ -165,8 +169,14 @@ def readSheet(response_sheet):
                                                                                 "-NewPassword", passw,
                                                                                 "-testing", pwshell_testing 
                                                                                 ], stdout=subprocess.PIPE)
-                        msg = str(passReset.communicate()[0][:-2], 'utf-8')
-                        status, update = msg.split('\r\n')
+                        response = str(passReset.communicate()[0][:-2], 'utf-8')
+                        res = response.split('\r\n')
+                        status, update, other_output = ""
+                        status, update = res[-2], res[-1]
+                        if len(res) > 2:
+                            other_output = ";".join(res[:-3])
+                            logging.debug(f"Additional output from PowerShell script: {other_output}")
+                        
 
                         
 
@@ -208,7 +218,8 @@ def readSheet(response_sheet):
                             send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year,
                                                         "username": f"CSG\\{newemail.split('@')[0]}", "email": newemail}, 
                                                     recipient=adminAlerts, subject="New Account Password Reset Error",template_name="new_hire_account_notification.html", with_attachment=False, cc=curEmpEmail)
-                     
+                    else:
+                        logging.warning(f"Account for {fname} {lname} not found in G-Suite yet: {newemail}") 
                             
                        
                 except HttpError as err:
@@ -219,12 +230,32 @@ def readSheet(response_sheet):
                         UpdateStatus(response_sheet,row_count,status_msg("2"),"Error occured when trying to verify account in Google console")
                         logging.error(f"Error checking account for {fname} {lname} in G-Suite: {err}")
 
+                except Exception as e:
+                    UpdateStatus(response_sheet,row_count,status_msg("2"),"Error occured when trying to verify account in Google console")
+                    logging.error(f"Unexpected error checking account for {fname} {lname} in G-Suite: {e}")
+                    # Send an email to ERC Team when there is an error
+                    send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": email, "error_message": str(e), 
+                                                  "new_hire_jrole": jobRole, "new_hire_dpart": department, "new_hire_adgroups": adgrps, "new_hire_ou": adorganizationalunit}, 
+                                                recipient=admin, subject="Account Creation Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
+
             else:
                 logging.debug(f"Row {row_count} does not match any known entry types. Skipping...")
 
 
         except IndexError as e:
             logging.error(f"Row {row_count} is missing some data, error_msg: {str(e)}. Skipping to the next row.")
+            
+            send_email_notification(data={"new_hire_fname": "not applicable", "new_hire_lname": "not applicable", "current_year": datetime.now().year, "new_hire_email": "not applicable", "error_message": f"{str(e)} <br> Missing data in the row {row_count}, please check the entry.", 
+                                                  "new_hire_jrole": "not applicable", "new_hire_dpart": "not applicable", "new_hire_adgroups": "not applicable", "new_hire_ou": "not applicable"}, 
+                                                recipient=admin, subject="Account Creation Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
+            row_count += 1
+            continue
+        except Exception as e:
+            logging.error(f"Unexpected error processing row {row_count}, error_msg: {str(e)}. Skipping to the next row.")
+            
+            send_email_notification(data={"new_hire_fname": "not applicable", "new_hire_lname": "not applicable", "current_year": datetime.now().year, "new_hire_email": "not applicable", "error_message": f"{str(e)} <br> Check row {row_count} entry.", 
+                                                  "new_hire_jrole": "not applicable", "new_hire_dpart": "not applicable", "new_hire_adgroups": "not applicable", "new_hire_ou": "not applicable"}, 
+                                                recipient=admin, subject="Account Creation Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
             row_count += 1
             continue
         

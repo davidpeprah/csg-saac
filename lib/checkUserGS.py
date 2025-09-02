@@ -42,12 +42,12 @@ def checkUser(email, dir_nav: str = "\\"):
         user = results
     
         if not user:
-            return ('No users in the domain.')
+            return ('The user is not in the domain.')
         else:
             return (u'{0}'.format(user['primaryEmail']))
 
     except HttpError as err:
-        return ('No users in the domain.')
+        return ('The user is not in the domain.')
 
 
 
