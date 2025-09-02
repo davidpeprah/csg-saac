@@ -113,7 +113,7 @@ def readSheet(response_sheet):
                 # Read Information from Powershell
                 response = str(createAcc.communicate()[0][:-2], 'utf-8')
                 logging.debug(response)
-                status, email, update, other_output = ""
+                status = ""; email = ""; update = ""; other_output = ""
                 res = response.split('\r\n')
                 status, email, update = res[-3], res[-2], res[-1]
                 if len(res) > 3:
@@ -171,7 +171,7 @@ def readSheet(response_sheet):
                                                                                 ], stdout=subprocess.PIPE)
                         response = str(passReset.communicate()[0][:-2], 'utf-8')
                         res = response.split('\r\n')
-                        status, update, other_output = ""
+                        status = ""; update = ""; other_output = ""
                         status, update = res[-2], res[-1]
                         if len(res) > 2:
                             other_output = ";".join(res[:-3])
