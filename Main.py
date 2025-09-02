@@ -162,7 +162,8 @@ def readSheet(response_sheet):
                         # Call Powershell script to reset password
                         passReset = subprocess.Popen(["Powershell.exe", "-File", "lib\\resetPass.ps1",
                                                                                 "-Email", newemail,
-                                                                                "-NewPassword", passw 
+                                                                                "-NewPassword", passw,
+                                                                                "-testing", pwshell_testing 
                                                                                 ], stdout=subprocess.PIPE)
                         msg = str(passReset.communicate()[0][:-2], 'utf-8')
                         status, update = msg.split('\r\n')
@@ -170,34 +171,45 @@ def readSheet(response_sheet):
                         
 
                         #Send account information to the new staff personal email and notify the employee who made the entry
-                        if (personal_email):
+                        if (status == "0"):
+                            logging.info(f"Password reset successful: {update}")
                             
-                            logging.info(f"Sending account information to new hire personal email: {personal_email}")
-                            # Send an email to ERC Team when there is an error
-                            send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year,
-                                                          "username": f"CSG\\{newemail.split('@')[0]}", "email": newemail, "password": passw}, 
-                                                recipient=personal_email, subject="Account Information from CSG",template_name="new_hire_account_notification.html", with_attachment=False)
+                            if (personal_email):
+                                logging.info(f"Sending account information to new hire personal email: {personal_email}")
+                                # Notify the new hire of their account information
+                                send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year,
+                                                            "username": f"CSG\\{newemail.split('@')[0]}", "email": newemail, "password": passw}, 
+                                                    recipient=personal_email, subject="Account Information from CSG",template_name="new_hire_account_notification.html", with_attachment=False)
                      
-                            # Notify the employee who made the entry
-                            logging.info(f"Notification email sent to {EmpEmail} about account creation for {firstName} {lastName}.")   
-                            send_email_notification(data={"current_year": datetime.now().year,"employee_name": f"{fname} {lname}", "new_hire_jrole": jobRole, "new_hire_dpart": department,''
-                                                         "personal_email": personal_email}, 
-                                                recipient=curEmpEmail, subject=f"Account for {firstName} {lastName}  Completed Successfully",template_name="no_personal_email.html", with_attachment=False,cc=adminAlerts)
-
-                        else:
-                            logging.warning(f"No personal email provided for new hire {firstName} {lastName}. Cannot send account information.")
-                            # Send an email to ERC Team when there is an error
-                            send_email_notification(data={"current_year": datetime.now().year,"username": f"CSG\\{newemail.split('@')[0]}", "email": newemail, "password": passw,
-                                                          "employee_name": f"{firstName} {lastName}", "new_hire_jrole": jobRole, "new_hire_dpart": department}, 
-                                                recipient=curEmpEmail, subject=f"Account for {firstName} {lastName}  Completed Successfully",template_name="no_personal_email.html", with_attachment=False,cc=adminAlerts)
+                                # Notify the employee who made the entry
+                                logging.info(f"Notification email sent to {EmpEmail} about account creation for {firstName} {lastName}.")   
+                                send_email_notification(data={"current_year": datetime.now().year,"employee_name": f"{fname} {lname}", "new_hire_jrole": jobRole, "new_hire_dpart": department,
+                                                            "personal_email": personal_email}, 
+                                                        recipient=curEmpEmail, subject=f"Account for {firstName} {lastName}  Completed Successfully",template_name="personal_email.html", with_attachment=False,cc=adminAlerts)
+                            
+                                 
+                            else:
+                                logging.warning(f"No personal email provided for new hire {firstName} {lastName}. Cannot send account information.")
+                                # Send an email to ERC Team when there is an error
+                                send_email_notification(data={"current_year": datetime.now().year,"username": f"CSG\\{newemail.split('@')[0]}", "email": newemail, "password": passw,
+                                                            "employee_name": f"{firstName} {lastName}", "new_hire_jrole": jobRole, "new_hire_dpart": department}, 
+                                                    recipient=curEmpEmail, subject=f"Account for {firstName} {lastName}  Completed Successfully",template_name="no_personal_email.html", with_attachment=False,cc=adminAlerts)
                         
-                        if (status == "1"):
+
+                        elif (status == "1"):
                             logging.error(f"Password reset failed: {update}")
                             #Send email to development team
                             send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": email, "error_message": update, 
                                                   "new_hire_jrole": jobRole, "new_hire_dpart": department, "new_hire_adgroups": adgrps, "new_hire_ou": adorganizationalunit}, 
                                                 recipient=admin, subject="New Account Password Reset Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
-                    
+
+                            
+                            # Notify the new hire of their account information
+                            send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year,
+                                                        "username": f"CSG\\{newemail.split('@')[0]}", "email": newemail}, 
+                                                    recipient=adminAlerts, subject="New Account Password Reset Error",template_name="new_hire_account_notification.html", with_attachment=False, cc=curEmpEmail)
+                     
+                            
                        
                 except HttpError as err:
                     if err.resp.status in [404,]:
