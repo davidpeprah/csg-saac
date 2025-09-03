@@ -224,7 +224,7 @@ def readSheet(response_sheet):
                         elif (status == "1"):
                             logging.error(f"Password reset failed: {update}")
                             #Send email to development team
-                            send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": email, "error_message": update, 
+                            send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": newemail, "error_message": update, 
                                                   "new_hire_jrole": jobRole, "new_hire_dpart": department, "new_hire_adgroups": adgrps, "new_hire_ou": adorganizationalunit}, 
                                                 recipient=admin, subject="New Account Password Reset Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
 
@@ -249,7 +249,7 @@ def readSheet(response_sheet):
                     UpdateStatus(response_sheet,row_count,status_msg("2"),"Error occured when trying to verify account in Google console")
                     logging.error(f"Unexpected error checking account for {fname} {lname} in G-Suite: {e}")
                     # Send an email to ERC Team when there is an error
-                    send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": email, "error_message": str(e), 
+                    send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": newemail, "error_message": str(e), 
                                                   "new_hire_jrole": jobRole, "new_hire_dpart": department, "new_hire_adgroups": adgrps, "new_hire_ou": adorganizationalunit}, 
                                                 recipient=admin, subject="Account Creation Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
 

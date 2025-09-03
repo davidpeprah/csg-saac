@@ -2,7 +2,7 @@
 #     Author: David Peprah
 #
 
-pram (
+param (
     [string]$Email,
     [string]$NewPassword,
     [string]$testing = "false"
@@ -13,18 +13,17 @@ import-Module ActiveDirectory
 $Time= (Get-Date)
 
 Try {
-$workEmail = $Email
-$password = $NewPassword
+$workEmail = $Email.ToLower().Trim()
 
 $user = get-aduser -Filter {mail -eq $workEmail} -Properties SamAccountName | select -ExpandProperty SamAccountName
 
 if ($testing -eq "true") {
     "$Time Testing mode enabled. No changes will be made to the AD." | out-file logs\event_log.log -append
-    Set-ADAccountPassword -Identity $user -Reset -NewPassword (ConvertTo-SecureString -AsPlainText $password -Force) -WhatIf
+    Set-ADAccountPassword -Identity $user -Reset -NewPassword (ConvertTo-SecureString -AsPlainText $NewPassword -Force) -WhatIf
     return ("0", "Testing mode enabled. No changes will be made to the AD.")
 }
 
-  Set-ADAccountPassword -Identity $user -Reset -NewPassword (ConvertTo-SecureString -AsPlainText $password -Force) -WhatIf
+  Set-ADAccountPassword -Identity $user -Reset -NewPassword (ConvertTo-SecureString -AsPlainText $NewPassword -Force) -WhatIf
   "$Time Password Reset Successful for $workEmail" | out-file logs\event_log.log -append
   
   return ("0", $user)
@@ -36,5 +35,5 @@ if ($testing -eq "true") {
   
   
   # Return this information to python
-  return ("1", $Time Password Reset failed $workEmail. Error Message: $ErrorMessage)
+  return ("1", "$Time Password Reset failed $workEmail. Error Message: $ErrorMessage")
 }
