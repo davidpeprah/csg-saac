@@ -63,7 +63,9 @@ def readSheet(response_sheet):
             otherInfo = row[12].strip()
             curEmpEmail = row[13].lower().strip()
             entryType = row[14].strip()
-            
+            ops_status = row[17].strip() if len(row) > 17 else ""
+
+
             pwshell_testing = "false"
             if testing:
                 logging.debug("Running in testing mode, no changes will be made to the AD.")
@@ -145,7 +147,7 @@ def readSheet(response_sheet):
                                                   "new_hire_jrole": jobRole, "new_hire_dpart": department, "new_hire_adgroups": adgrps, "new_hire_ou": adorganizationalunit}, 
                                                 recipient=admin, subject="Account Creation Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
                                                                                        
-            elif entryType == "Pending":
+            elif ops_status == "Pending":
                 logging.info(f"Processing pending account for: {fname} {lname}, Job Role: {jobRole}, Department: {department}")
                 
                 personal_email = str(pEmail)
