@@ -34,7 +34,7 @@ def check_log_file(filepath: str):
 def readSheet(response_sheet):
     global sheet
     global adminAlerts
-    
+
     RANGE_NAME = response_sheet + Range
 
     result = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range=RANGE_NAME).execute()
@@ -610,6 +610,7 @@ if __name__ == '__main__':
             sys.exit(1)
         adminAlerts = config.get('admin', 'adminAlerts', fallback=admin)
         adminAlerts = [f"{email}@{domain}" if "@" not in email else email for email in adminAlerts.split(',')]
+        adminAlerts = ",".join(adminAlerts) # Convert list back to comma-separated string
         logging.debug(f"Authorized Users: {authUsers}, Domain: {domain}, Admin: {admin}, Open Ticket: {openticket}, Service Account Email: {srvAccEmail}, Admin Alerts: {adminAlerts}")
         logging.info("Authorized users and domain loaded successfully.")
     else:
