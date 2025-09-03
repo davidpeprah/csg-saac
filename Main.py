@@ -33,6 +33,7 @@ def check_log_file(filepath: str):
 
 def readSheet(response_sheet):
     global sheet
+    global adminAlerts
     
     RANGE_NAME = response_sheet + Range
 
