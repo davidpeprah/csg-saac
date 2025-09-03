@@ -98,9 +98,21 @@ def readSheet(response_sheet):
                 adgrps = ADGroups(jobrole_, department_)
                 adorganizationalunit = organizationalUnit(jobrole_, department_)
                 
+                
+                # check if organizational unit is found
+                if adorganizationalunit is None:
+                    logging.error(f"Organizational Unit not found for Job Role: {jobRole}, Department: {department}. Cannot create account for {fname} {lname}.")
+                    UpdateStatus(response_sheet,row_count,status_msg("2"),"Error: Organizational Unit not found")
+                    # Send an email to ERC Team when there is an error
+                    send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": "N/A", "error_message": f"Organizational Unit not found for Job Role: {jobRole}, Department: {department}. Cannot create account for {fname} {lname}.", 
+                                                  "new_hire_jrole": jobRole, "new_hire_dpart": department, "new_hire_adgroups": adgrps, "new_hire_ou": "N/A"}, 
+                                                recipient=admin, subject="Account Creation Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
+                    row_count += 1
+                    continue
+                
                 # Send Data to Powershell
                 logging.debug(f"Creating account for {fname} {lname} AD groups: {adgrps}, Job Role: {jobRole}, Department: {department}, OU: {adorganizationalunit}")
-                
+                 # Call Powershell script to create account
                 createAcc = subprocess.Popen(["Powershell.exe", "-File", r"lib\setAcc.ps1",
                                               "-FirstName", fname,
                                               "-MiddleName", mname,
@@ -388,14 +400,14 @@ def organizationalUnit(jobrole, department):
     departmentJobrole = f"{department.lower()}{jobrole.lower()}"
     logging.debug(f"Looking up OU for combined department and job role: {departmentJobrole}")
     if config.options('OrganizationalUnits'):
-        if departmentJobrole.lower() in config.options('OrganizationalUnits'):
+        if departmentJobrole in config.options('OrganizationalUnits'):
             logging.debug(f"Found OU for combined department and job role: {departmentJobrole}")
-            return config.get('OrganizationalUnits', jobrole)
+            return config.get('OrganizationalUnits', departmentJobrole)
         elif jobrole.lower() in config.options('OrganizationalUnits'):
             logging.debug(f"Found OU for job role: {jobrole}")
             return config.get('OrganizationalUnits', jobrole)
     logging.debug(f"No OU found for job role: {jobrole} or combined department and job role: {departmentJobrole}")  
-    return ''
+    return None
 
 def send_email_notification(data: dict = None, recipient: str = None, subject: str = " ", file_path: str = None, file_name: str = None, template_name: str = None, with_attachment: bool = False, message: str = "TESTING EMAIL NOTIFICATION", cc: str = None):
     
