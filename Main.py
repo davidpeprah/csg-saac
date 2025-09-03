@@ -512,6 +512,7 @@ def load_credentials_access():
 
 
 def main():    # Load credentials and access the Google Sheets API
+    global response_sheet
     load_credentials_access()
     logging.info("Google Sheets API credentials loaded and access granted.")    
 
