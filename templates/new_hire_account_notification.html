@@ -14,7 +14,7 @@
 <body>
     <div class="container">
         <h2>Welcome to the Team!</h2>
-        <p>Dear {{ employee_name }},</p>
+        <p>Dear {{ new_hire_fname }},</p>
         <p>
             We are excited to welcome you to our organization. Your employee account has been created. Please find your login details below:
         </p>
@@ -24,7 +24,8 @@
             <strong>Temporary Password:</strong> {{ password }}
         </div>
         <p>
-            Please log in as soon as possible and change your password for security. If you have any issues accessing your account, contact IT support.
+            Please log in as soon as possible and change your password for security. <br>
+            If you have any issues accessing your account, <a href="mailto:itdepartment@columbusschoolforgirls.org">send email to</a> IT department.
         </p>
         <div class="footer">
             Best regards,<br>

@@ -55,16 +55,14 @@ def readSheet(response_sheet):
             pEmail = row[4].strip()
             department = row[5].lower().strip()
             jobTitle = row[6].title().strip()
-            jobRole = row[15].lower().strip()
-            laptop_preference = row[7].strip()
-            googleSharedDrive = row[8].strip()
-            localSharedDrive = row[9].strip()
-            needPhoneExtension = row[10].strip()
-            phoneExtension = row[11].strip()
-            otherInfo = row[12].strip()
-            curEmpEmail = row[13].lower().strip()
-            entryType = row[14].strip()
-            ops_status = row[17].strip() if len(row) > 17 else ""
+            jobRole = row[13].lower().strip()
+            googleSharedDrive = row[7].strip()
+            localSharedDrive = row[8].strip()
+            phoneExtension = row[9].strip()
+            otherInfo = row[10].strip()
+            curEmpEmail = row[11].lower().strip()
+            entryType = row[12].strip()
+            ops_status = row[15].strip() if len(row) > 15 else ""
 
 
             pwshell_testing = "false"
@@ -167,7 +165,7 @@ def readSheet(response_sheet):
                 firstName = str(fname)
                 lastName = str(lname)
                 EmpEmail = str(curEmpEmail)
-                newemail = row[16]
+                newemail = row[14]
 
                 try:
                     check = checkUser(newemail, dir_nav)
