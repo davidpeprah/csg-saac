@@ -143,8 +143,8 @@ def readSheet(response_sheet):
                     # Send email notification other information to the IT department to set up laptop, phone extension etc
                     logging.debug(f"Sending new hire IT request email to {adminAlerts} for {fname} {lname}")
                     send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": email, 
-                                                  "new_hire_jrole": jobRole.title(), "new_hire_dpart": department.title(), "laptop_preference": laptop_preference, "googleSharedDrive": googleSharedDrive, 
-                                                  "localSharedDrive": localSharedDrive, "needPhoneExtension": needPhoneExtension, "phoneExtension": phoneExtension, 
+                                                  "new_hire_jrole": jobRole.title(), "new_hire_dpart": department.title(), "googleSharedDrive": googleSharedDrive, 
+                                                  "localSharedDrive": localSharedDrive, "phoneExtension": phoneExtension, 
                                                   "otherInfo": otherInfo}, 
                                                 recipient=adminAlerts, subject="New Employee IT Request",template_name="employee_requests.html", with_attachment=False,cc=curEmpEmail)
                     
