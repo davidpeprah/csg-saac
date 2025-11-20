@@ -47,233 +47,237 @@ def readSheet(response_sheet):
     logging.info(f"Data retrieved successfully from the range {RANGE_NAME} of the spreadsheet.")
     row_count = 2
     for row in values:
-        logging.debug(f"Processing row {row_count}: {row}")
-        try:
-            fname = row[1].title().strip()
-            mname = row[2].title().strip()
-            lname = row[3].title().strip()
-            pEmail = row[4].strip()
-            department = row[5].lower().strip()
-            jobTitle = row[6].title().strip()
-            jobRole = row[13].lower().strip()
-            googleSharedDrive = row[7].strip()
-            localSharedDrive = row[8].strip()
-            phoneExtension = row[9].strip()
-            otherInfo = row[10].strip()
-            curEmpEmail = row[11].lower().strip()
-            entryType = row[12].strip()
-            ops_status = row[15].strip() if len(row) > 15 else ""
+        if row:
+            logging.debug(f"Processing row {row_count}: {row}")
+            try:
+                fname = row[1].title().strip()
+                mname = row[2].title().strip()
+                lname = row[3].title().strip()
+                pEmail = row[4].strip()
+                department = row[5].lower().strip()
+                jobTitle = row[6].title().strip()
+                jobRole = row[13].lower().strip()
+                googleSharedDrive = row[7].strip()
+                localSharedDrive = row[8].strip()
+                phoneExtension = row[9].strip()
+                otherInfo = row[10].strip()
+                curEmpEmail = row[11].lower().strip()
+                entryType = row[12].strip()
+                ops_status = row[15].strip() if len(row) > 15 else ""
 
 
-            pwshell_testing = "false"
-            if testing:
-                logging.debug("Running in testing mode, no changes will be made to the AD.")
-                curEmpEmail = admin
-                adminAlerts = admin
-                pwshell_testing = "true"
+                pwshell_testing = "false"
+                if testing:
+                    logging.debug("Running in testing mode, no changes will be made to the AD.")
+                    curEmpEmail = admin
+                    adminAlerts = admin
+                    pwshell_testing = "true"
 
 
-            if entryType == "NEW":
-                logging.info(f"Creating account for new hire: {fname} {lname}, Job Role: {jobRole}, Department: {department}")
-                
-                if curEmpEmail.split("@")[0] not in authUsers:
-                    logging.warning(f"Unauthorized user {curEmpEmail} trying to create a district email account.")
-                    # Update the status and entry type to Denied and OLD respectively
-                    UpdateStatus(response_sheet,row_count,status_msg("3"),"Access Denied")
-                    UpdateEntryType(response_sheet,row_count,"OLD")
+                if entryType == "NEW":
+                    logging.info(f"Creating account for new hire: {fname} {lname}, Job Role: {jobRole}, Department: {department}")
                     
-                    # Send an email to the unauthorized user and copy the admin alerts
-                    send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year}, recipient=curEmpEmail, subject="Unauthorized User Attempt",
-                                            template_name="access_denied.html", with_attachment=False,cc=adminAlerts)
-                    
-                    # Skip to the next row
-                    row_count += 1
-                    continue
-
-                
-                #Get AD groups
-                jobrole_ = "".join(re.split('[^a-zA-Z0-9]+', jobRole.lower()))
-                department_ = "".join(re.split('[^a-zA-Z0-9]+', department.lower()))
-                adgrps = ADGroups(jobrole_, department_)
-                adorganizationalunit = organizationalUnit(jobrole_, department_)
-                
-                
-                # check if organizational unit is found
-                if adorganizationalunit is None:
-                    logging.error(f"Organizational Unit not found for Job Role: {jobRole}, Department: {department}. Cannot create account for {fname} {lname}.")
-                    UpdateStatus(response_sheet,row_count,status_msg("2"),"Error: Organizational Unit not found")
-                    # Send an email to ERC Team when there is an error
-                    send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": "N/A", "error_message": f"Organizational Unit not found for Job Role: {jobRole}, Department: {department}. Cannot create account for {fname} {lname}.", 
-                                                  "new_hire_jrole": jobRole, "new_hire_dpart": department, "new_hire_adgroups": adgrps, "new_hire_ou": "N/A"}, 
-                                                recipient=admin, subject="Account Creation Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
-                    row_count += 1
-                    continue
-                
-                # Send Data to Powershell
-                logging.debug(f"Creating account for {fname} {lname} AD groups: {adgrps}, Job Role: {jobRole}, Department: {department}, OU: {adorganizationalunit}")
-                 # Call Powershell script to create account
-                createAcc = subprocess.Popen(["Powershell.exe", "-File", r"lib\setAcc.ps1",
-                                              "-FirstName", fname,
-                                              "-MiddleName", mname,
-                                              "-LastName", lname,
-                                              "-jobrole", jobRole.lower(),
-                                              "-department", department.lower(),
-                                              "-adgroups", adgrps,
-                                              "-oupath", adorganizationalunit,
-                                              "-jobtitle", jobTitle,
-                                              "-testing", pwshell_testing], stdout=subprocess.PIPE)
-
-                # Read Information from Powershell
-                response = str(createAcc.communicate()[0][:-2], 'utf-8')
-                logging.debug(response)
-                status = ""; email = ""; update = ""; other_output = ""
-                res = response.split('\r\n')
-                status, email, update = res[-3], res[-2], res[-1]
-                if len(res) > 3:
-                    other_output = ";".join(res[:-4])
-                    logging.debug(f"Additional output from PowerShell script: {other_output}")
-
-                if (status == "1"):
-                    logging.info(f"Account for {fname} {lname} created successfully: {email}")
-                    UpdateStatus(response_sheet,row_count,status_msg(status),update)
-                    UpdateMail(response_sheet,row_count,email)
-                    UpdateEntryType(response_sheet,row_count,update)
-
-                    
-                    # Send email notification other information to the IT department to set up laptop, phone extension etc
-                    logging.debug(f"Sending new hire IT request email to {adminAlerts} for {fname} {lname}")
-                    send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": email, 
-                                                  "new_hire_jrole": jobRole.title(), "new_hire_dpart": department.title(), "googleSharedDrive": googleSharedDrive, 
-                                                  "localSharedDrive": localSharedDrive, "phoneExtension": phoneExtension, 
-                                                  "otherInfo": otherInfo}, 
-                                                recipient=adminAlerts, subject="New Employee IT Request",template_name="employee_requests.html", with_attachment=False,cc=curEmpEmail)
-                    
-
-                elif (status == "2"):
-                    UpdateStatus(response_sheet,row_count,status_msg(status),update)
-                    UpdateEntryType(response_sheet,row_count,update)
-                    logging.error(f"Error creating account for {fname} {lname}: {update}")  
-                    # Send an email to ERC Team when there is an error
-                    send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": email, "error_message": update + f"<br> Additional Info: {other_output}", 
-                                                  "new_hire_jrole": jobRole, "new_hire_dpart": department, "new_hire_adgroups": adgrps, "new_hire_ou": adorganizationalunit}, 
-                                                recipient=admin, subject="Account Creation Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
-                                                                                       
-            elif ops_status == "Pending":
-                logging.info(f"Processing pending account for: {fname} {lname}, Job Role: {jobRole}, Department: {department}")
-                
-                personal_email = str(pEmail)
-                firstName = str(fname)
-                lastName = str(lname)
-                EmpEmail = str(curEmpEmail)
-                newemail = row[14]
-
-                try:
-                    check = checkUser(newemail, dir_nav)
-                    
-                    if check.lower() == newemail.lower():
-                        logging.info(f"Account for {fname} {lname} verified in G-Suite: {newemail}")
-                        UpdateStatus(response_sheet,row_count,status_msg("0"),"Account Successfully confirm in G-Suite")
-                        passw = password()
-                        logging.debug(f"Resetting password for {newemail}")
-
-                        # Call Powershell script to reset password
-                        passReset = subprocess.Popen(["Powershell.exe", "-File", "lib\\resetPass.ps1",
-                                                                                "-Email", newemail,
-                                                                                "-NewPassword", passw,
-                                                                                "-testing", pwshell_testing 
-                                                                                ], stdout=subprocess.PIPE)
-                        response = str(passReset.communicate()[0][:-2], 'utf-8')
-                        res = response.split('\r\n')
-                        status = ""; update = ""; other_output = ""
-                        status, update = res[-2], res[-1]
-                        if len(res) > 2:
-                            other_output = ";".join(res[:-3])
-                            logging.debug(f"Additional output from PowerShell script: {other_output}")
+                    if curEmpEmail.split("@")[0] not in authUsers:
+                        logging.warning(f"Unauthorized user {curEmpEmail} trying to create a district email account.")
+                        # Update the status and entry type to Denied and OLD respectively
+                        UpdateStatus(response_sheet,row_count,status_msg("3"),"Access Denied")
+                        UpdateEntryType(response_sheet,row_count,"OLD")
                         
+                        # Send an email to the unauthorized user and copy the admin alerts
+                        send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year}, recipient=curEmpEmail, subject="Unauthorized User Attempt",
+                                                template_name="access_denied.html", with_attachment=False,cc=adminAlerts)
+                        
+                        # Skip to the next row
+                        row_count += 1
+                        continue
+
+                    
+                    #Get AD groups
+                    jobrole_ = "".join(re.split('[^a-zA-Z0-9]+', jobRole.lower()))
+                    department_ = "".join(re.split('[^a-zA-Z0-9]+', department.lower()))
+                    adgrps = ADGroups(jobrole_, department_)
+                    adorganizationalunit = organizationalUnit(jobrole_, department_)
+                    
+                    
+                    # check if organizational unit is found
+                    if adorganizationalunit is None:
+                        logging.error(f"Organizational Unit not found for Job Role: {jobRole}, Department: {department}. Cannot create account for {fname} {lname}.")
+                        UpdateStatus(response_sheet,row_count,status_msg("2"),"Error: Organizational Unit not found")
+                        # Send an email to ERC Team when there is an error
+                        send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": "N/A", "error_message": f"Organizational Unit not found for Job Role: {jobRole}, Department: {department}. Cannot create account for {fname} {lname}.", 
+                                                    "new_hire_jrole": jobRole, "new_hire_dpart": department, "new_hire_adgroups": adgrps, "new_hire_ou": "N/A"}, 
+                                                    recipient=admin, subject="Account Creation Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
+                        row_count += 1
+                        continue
+                    
+                    # Send Data to Powershell
+                    logging.debug(f"Creating account for {fname} {lname} AD groups: {adgrps}, Job Role: {jobRole}, Department: {department}, OU: {adorganizationalunit}")
+                    # Call Powershell script to create account
+                    createAcc = subprocess.Popen(["Powershell.exe", "-File", r"lib\setAcc.ps1",
+                                                "-FirstName", fname,
+                                                "-MiddleName", mname,
+                                                "-LastName", lname,
+                                                "-jobrole", jobRole.lower(),
+                                                "-department", department.lower(),
+                                                "-adgroups", adgrps,
+                                                "-oupath", adorganizationalunit,
+                                                "-jobtitle", jobTitle,
+                                                "-testing", pwshell_testing], stdout=subprocess.PIPE)
+
+                    # Read Information from Powershell
+                    response = str(createAcc.communicate()[0][:-2], 'utf-8')
+                    logging.debug(response)
+                    status = ""; email = ""; update = ""; other_output = ""
+                    res = response.split('\r\n')
+                    status, email, update = res[-3], res[-2], res[-1]
+                    if len(res) > 3:
+                        other_output = ";".join(res[:-4])
+                        logging.debug(f"Additional output from PowerShell script: {other_output}")
+
+                    if (status == "1"):
+                        logging.info(f"Account for {fname} {lname} created successfully: {email}")
+                        UpdateStatus(response_sheet,row_count,status_msg(status),update)
+                        UpdateMail(response_sheet,row_count,email)
+                        UpdateEntryType(response_sheet,row_count,update)
 
                         
+                        # Send email notification other information to the IT department to set up laptop, phone extension etc
+                        logging.debug(f"Sending new hire IT request email to {adminAlerts} for {fname} {lname}")
+                        send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": email, 
+                                                    "new_hire_jrole": jobRole.title(), "new_hire_dpart": department.title(), "googleSharedDrive": googleSharedDrive, 
+                                                    "localSharedDrive": localSharedDrive, "phoneExtension": phoneExtension, 
+                                                    "otherInfo": otherInfo}, 
+                                                    recipient=adminAlerts, subject="New Employee IT Request",template_name="employee_requests.html", with_attachment=False,cc=curEmpEmail)
+                        
 
-                        #Send account information to the new staff personal email and notify the employee who made the entry
-                        if (status == "0"):
-                            logging.info(f"Password reset successful: {update}")
+                    elif (status == "2"):
+                        UpdateStatus(response_sheet,row_count,status_msg(status),update)
+                        UpdateEntryType(response_sheet,row_count,update)
+                        logging.error(f"Error creating account for {fname} {lname}: {update}")  
+                        # Send an email to ERC Team when there is an error
+                        send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": email, "error_message": update + f"<br> Additional Info: {other_output}", 
+                                                    "new_hire_jrole": jobRole, "new_hire_dpart": department, "new_hire_adgroups": adgrps, "new_hire_ou": adorganizationalunit}, 
+                                                    recipient=admin, subject="Account Creation Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
+                                                                                        
+                elif ops_status == "Pending":
+                    logging.info(f"Processing pending account for: {fname} {lname}, Job Role: {jobRole}, Department: {department}")
+                    
+                    personal_email = str(pEmail)
+                    firstName = str(fname)
+                    lastName = str(lname)
+                    EmpEmail = str(curEmpEmail)
+                    newemail = row[14]
+
+                    try:
+                        check = checkUser(newemail, dir_nav)
+                        
+                        if check.lower() == newemail.lower():
+                            logging.info(f"Account for {fname} {lname} verified in G-Suite: {newemail}")
+                            UpdateStatus(response_sheet,row_count,status_msg("0"),"Account Successfully confirm in G-Suite")
+                            passw = password()
+                            logging.debug(f"Resetting password for {newemail}")
+
+                            # Call Powershell script to reset password
+                            passReset = subprocess.Popen(["Powershell.exe", "-File", "lib\\resetPass.ps1",
+                                                                                    "-Email", newemail,
+                                                                                    "-NewPassword", passw,
+                                                                                    "-testing", pwshell_testing 
+                                                                                    ], stdout=subprocess.PIPE)
+                            response = str(passReset.communicate()[0][:-2], 'utf-8')
+                            res = response.split('\r\n')
+                            status = ""; update = ""; other_output = ""
+                            status, update = res[-2], res[-1]
+                            if len(res) > 2:
+                                other_output = ";".join(res[:-3])
+                                logging.debug(f"Additional output from PowerShell script: {other_output}")
                             
-                            if (personal_email):
-                                logging.info(f"Sending account information to new hire personal email: {personal_email}")
+
+                            
+
+                            #Send account information to the new staff personal email and notify the employee who made the entry
+                            if (status == "0"):
+                                logging.info(f"Password reset successful: {update}")
+                                
+                                if (personal_email):
+                                    logging.info(f"Sending account information to new hire personal email: {personal_email}")
+                                    # Notify the new hire of their account information
+                                    send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year,
+                                                                "username": f"CSG\\{newemail.split('@')[0]}", "email": newemail, "password": passw}, 
+                                                        recipient=personal_email, subject="Account Information from CSG",template_name="new_hire_account_notification.html", with_attachment=False)
+                        
+                                    # Notify the employee who made the entry
+                                    logging.info(f"Notification email sent to {EmpEmail} about account creation for {firstName} {lastName}.")   
+                                    send_email_notification(data={"current_year": datetime.now().year,"employee_name": f"{fname} {lname}", "new_hire_jrole": jobRole, "new_hire_dpart": department,
+                                                                "personal_email": personal_email}, 
+                                                            recipient=curEmpEmail, subject=f"Account for {firstName} {lastName}  Completed Successfully",template_name="personal_email.html", with_attachment=False,cc=adminAlerts)
+                                
+                                    
+                                else:
+                                    logging.warning(f"No personal email provided for new hire {firstName} {lastName}. Cannot send account information.")
+                                    # Send an email to ERC Team when there is an error
+                                    send_email_notification(data={"current_year": datetime.now().year,"username": f"CSG\\{newemail.split('@')[0]}", "email": newemail, "password": passw,
+                                                                "employee_name": f"{firstName} {lastName}", "new_hire_jrole": jobRole, "new_hire_dpart": department}, 
+                                                        recipient=curEmpEmail, subject=f"Account for {firstName} {lastName}  Completed Successfully",template_name="no_personal_email.html", with_attachment=False,cc=adminAlerts)
+                            
+
+                            elif (status == "1"):
+                                logging.error(f"Password reset failed: {update}")
+                                #Send email to development team
+                                send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": newemail, "error_message": update, 
+                                                    "new_hire_jrole": jobRole, "new_hire_dpart": department, "new_hire_adgroups": adgrps, "new_hire_ou": adorganizationalunit}, 
+                                                    recipient=admin, subject="New Account Password Reset Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
+
+                                
                                 # Notify the new hire of their account information
                                 send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year,
-                                                            "username": f"CSG\\{newemail.split('@')[0]}", "email": newemail, "password": passw}, 
-                                                    recipient=personal_email, subject="Account Information from CSG",template_name="new_hire_account_notification.html", with_attachment=False)
-                     
-                                # Notify the employee who made the entry
-                                logging.info(f"Notification email sent to {EmpEmail} about account creation for {firstName} {lastName}.")   
-                                send_email_notification(data={"current_year": datetime.now().year,"employee_name": f"{fname} {lname}", "new_hire_jrole": jobRole, "new_hire_dpart": department,
-                                                            "personal_email": personal_email}, 
-                                                        recipient=curEmpEmail, subject=f"Account for {firstName} {lastName}  Completed Successfully",template_name="personal_email.html", with_attachment=False,cc=adminAlerts)
-                            
-                                 
-                            else:
-                                logging.warning(f"No personal email provided for new hire {firstName} {lastName}. Cannot send account information.")
-                                # Send an email to ERC Team when there is an error
-                                send_email_notification(data={"current_year": datetime.now().year,"username": f"CSG\\{newemail.split('@')[0]}", "email": newemail, "password": passw,
-                                                            "employee_name": f"{firstName} {lastName}", "new_hire_jrole": jobRole, "new_hire_dpart": department}, 
-                                                    recipient=curEmpEmail, subject=f"Account for {firstName} {lastName}  Completed Successfully",template_name="no_personal_email.html", with_attachment=False,cc=adminAlerts)
+                                                            "username": f"CSG\\{newemail.split('@')[0]}", "email": newemail}, 
+                                                        recipient=adminAlerts, subject="New Account Password Reset Error",template_name="password_reset_failed.html", with_attachment=False, cc=curEmpEmail)
+                        else:
+                            logging.warning(f"Account for {fname} {lname} not found in G-Suite yet: {newemail}") 
+                                
                         
+                    except HttpError as err:
+                        if err.resp.status in [404,]:
+                            UpdateStatus(response_sheet,row_count,status_msg("1"),"Account has not been created in Google Console yet")
+                            logging.warning(f"Account for {fname} {lname} not found in G-Suite yet: {newemail}")
+                        else:
+                            UpdateStatus(response_sheet,row_count,status_msg("2"),"Error occured when trying to verify account in Google console")
+                            logging.error(f"Error checking account for {fname} {lname} in G-Suite: {err}")
 
-                        elif (status == "1"):
-                            logging.error(f"Password reset failed: {update}")
-                            #Send email to development team
-                            send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": newemail, "error_message": update, 
-                                                  "new_hire_jrole": jobRole, "new_hire_dpart": department, "new_hire_adgroups": adgrps, "new_hire_ou": adorganizationalunit}, 
-                                                recipient=admin, subject="New Account Password Reset Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
-
-                            
-                            # Notify the new hire of their account information
-                            send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year,
-                                                        "username": f"CSG\\{newemail.split('@')[0]}", "email": newemail}, 
-                                                    recipient=adminAlerts, subject="New Account Password Reset Error",template_name="password_reset_failed.html", with_attachment=False, cc=curEmpEmail)
-                    else:
-                        logging.warning(f"Account for {fname} {lname} not found in G-Suite yet: {newemail}") 
-                            
-                       
-                except HttpError as err:
-                    if err.resp.status in [404,]:
-                        UpdateStatus(response_sheet,row_count,status_msg("1"),"Account has not been created in Google Console yet")
-                        logging.warning(f"Account for {fname} {lname} not found in G-Suite yet: {newemail}")
-                    else:
+                    except Exception as e:
                         UpdateStatus(response_sheet,row_count,status_msg("2"),"Error occured when trying to verify account in Google console")
-                        logging.error(f"Error checking account for {fname} {lname} in G-Suite: {err}")
+                        logging.error(f"Unexpected error checking account for {fname} {lname} in G-Suite: {e}")
+                        # Send an email to ERC Team when there is an error
+                        send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": newemail, "error_message": str(e), 
+                                                    "new_hire_jrole": jobRole, "new_hire_dpart": department, "new_hire_adgroups": adgrps, "new_hire_ou": adorganizationalunit}, 
+                                                    recipient=admin, subject="Account Creation Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
 
-                except Exception as e:
-                    UpdateStatus(response_sheet,row_count,status_msg("2"),"Error occured when trying to verify account in Google console")
-                    logging.error(f"Unexpected error checking account for {fname} {lname} in G-Suite: {e}")
-                    # Send an email to ERC Team when there is an error
-                    send_email_notification(data={"new_hire_fname": fname, "new_hire_lname": lname, "current_year": datetime.now().year, "new_hire_email": newemail, "error_message": str(e), 
-                                                  "new_hire_jrole": jobRole, "new_hire_dpart": department, "new_hire_adgroups": adgrps, "new_hire_ou": adorganizationalunit}, 
-                                                recipient=admin, subject="Account Creation Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
-
-            else:
-                logging.debug(f"Row {row_count} does not match any known entry types. Skipping...")
+                else:
+                    logging.debug(f"Row {row_count} does not match any known entry types. Skipping...")
 
 
-        except IndexError as e:
-            logging.error(f"Row {row_count} is missing some data, error_msg: {str(e)}. Skipping to the next row.")
+            except IndexError as e:
+                logging.error(f"Row {row_count} is missing some data, error_msg: {str(e)}. Skipping to the next row.")
+                
+                send_email_notification(data={"new_hire_fname": "not applicable", "new_hire_lname": "not applicable", "current_year": datetime.now().year, "new_hire_email": "not applicable", "error_message": f"{str(e)} <br> Missing data in the row {row_count}, please check the entry.", 
+                                                    "new_hire_jrole": "not applicable", "new_hire_dpart": "not applicable", "new_hire_adgroups": "not applicable", "new_hire_ou": "not applicable"}, 
+                                                    recipient=admin, subject="Account Creation Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
+                row_count += 1
+                continue
+            except Exception as e:
+                logging.error(f"Unexpected error processing row {row_count}, error_msg: {str(e)}. Skipping to the next row.")
+                
+                send_email_notification(data={"new_hire_fname": "not applicable", "new_hire_lname": "not applicable", "current_year": datetime.now().year, "new_hire_email": "not applicable", "error_message": f"{str(e)} <br> Check row {row_count} entry.", 
+                                                    "new_hire_jrole": "not applicable", "new_hire_dpart": "not applicable", "new_hire_adgroups": "not applicable", "new_hire_ou": "not applicable"}, 
+                                                    recipient=admin, subject="Account Creation Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
+                row_count += 1
+                continue
             
-            send_email_notification(data={"new_hire_fname": "not applicable", "new_hire_lname": "not applicable", "current_year": datetime.now().year, "new_hire_email": "not applicable", "error_message": f"{str(e)} <br> Missing data in the row {row_count}, please check the entry.", 
-                                                  "new_hire_jrole": "not applicable", "new_hire_dpart": "not applicable", "new_hire_adgroups": "not applicable", "new_hire_ou": "not applicable"}, 
-                                                recipient=admin, subject="Account Creation Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
+            row_count += 1
+        else:
+            logging.debug(f"Row {row_count} is empty. Skipping...")
             row_count += 1
             continue
-        except Exception as e:
-            logging.error(f"Unexpected error processing row {row_count}, error_msg: {str(e)}. Skipping to the next row.")
-            
-            send_email_notification(data={"new_hire_fname": "not applicable", "new_hire_lname": "not applicable", "current_year": datetime.now().year, "new_hire_email": "not applicable", "error_message": f"{str(e)} <br> Check row {row_count} entry.", 
-                                                  "new_hire_jrole": "not applicable", "new_hire_dpart": "not applicable", "new_hire_adgroups": "not applicable", "new_hire_ou": "not applicable"}, 
-                                                recipient=admin, subject="Account Creation Error",template_name="account_creation_error.html", with_attachment=False,cc=adminAlerts)
-            row_count += 1
-            continue
-        
-        row_count += 1
-
 
 def UpdateStatus(sh,address,status,update):
     global sheet

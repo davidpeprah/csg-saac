@@ -158,9 +158,9 @@ try{
         "$Time Testing mode is enabled. No changes will be made to Active Directory" | out-file logs\event_log.log -append
         New-ADUser -Name $fullName -GivenName $FirstName -Surname $LastName -DisplayName $fullName `
         -initials $middleInitial -AccountPassword (ConvertTo-SecureString -AsPlainText $password -Force) `
-        -SamAccountName $SamAccountName -UserPrincipalName $userPrincipalName -HomeDrive "H:" -HomeDirectory $homeDirectory `
+        -SamAccountName $SamAccountName -UserPrincipalName $userPrincipalName `
         -Path $oupath -EmailAddress $emailAddress -Description $description -Company "Columbus School For Girls" `
-        -Department $department -Title $jobtitle -PasswordNeverExpires $True -Enabled $True -WhatIf
+        -Department $department -Title $jobtitle -PasswordNeverExpires $False -Enabled $True -WhatIf
 
         $unknowngroups = @()
         # Add user account to default Group
@@ -175,9 +175,9 @@ try{
 
     New-ADUser -Name $fullName -GivenName $FirstName -Surname $LastName -DisplayName $fullName `
     -initials $middleInitial -AccountPassword (ConvertTo-SecureString -AsPlainText $password -Force) `
-    -SamAccountName $SamAccountName -UserPrincipalName $userPrincipalName -HomeDrive "H:" -HomeDirectory $homeDirectory `
+    -SamAccountName $SamAccountName -UserPrincipalName $userPrincipalName `
     -Path $oupath -EmailAddress $emailAddress -Description $description -Company "Columbus School For Girls" `
-    -Department $department -Title $jobtitle -PasswordNeverExpires $True -Enabled $True
+    -Department $department -Title $jobtitle -PasswordNeverExpires $False -Enabled $True
 
 
     $unknowngroups = @()
