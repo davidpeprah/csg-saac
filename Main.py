@@ -406,9 +406,15 @@ def organizationalUnit(jobrole, department):
         if departmentJobrole in config.options('OrganizationalUnits'):
             logging.debug(f"Found OU for combined department and job role: {departmentJobrole}")
             return config.get('OrganizationalUnits', departmentJobrole)
+        elif department.lower() in config.options('OrganizationalUnits'):
+            logging.debug(f"Found OU for department: {department}")
+            return config.get('OrganizationalUnits', department)
         elif jobrole.lower() in config.options('OrganizationalUnits'):
             logging.debug(f"Found OU for job role: {jobrole}")
             return config.get('OrganizationalUnits', jobrole)
+        else:
+            logging.debug(f"Using default OU for job role: {jobrole}")
+            return config.get('OrganizationalUnits', 'staff')
     logging.debug(f"No OU found for job role: {jobrole} or combined department and job role: {departmentJobrole}")  
     return None
 
