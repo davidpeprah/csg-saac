@@ -213,8 +213,8 @@ def readSheet(response_sheet):
                                 
                                     
                                 else:
-                                    logging.warning(f"No personal email provided for new hire {firstName} {lastName}. Cannot send account information.")
-                                    # Send an email to ERC Team when there is an error
+                                    logging.info(f"No personal email provided for new hire {firstName} {lastName}. Cannot send account information.")
+                                    # Notify the employee who made the entry about account creation and missing personal email
                                     send_email_notification(data={"current_year": datetime.now().year,"username": f"CSG\\{newemail.split('@')[0]}", "email": newemail, "password": passw,
                                                                 "employee_name": f"{firstName} {lastName}", "new_hire_jrole": jobRole, "new_hire_dpart": department}, 
                                                         recipient=curEmpEmail, subject=f"Account for {firstName} {lastName}  Completed Successfully",template_name="no_personal_email.html", with_attachment=False,cc=adminAlerts)
